@@ -2,7 +2,9 @@ from env import LexicalEnvironment
 from intbase import ErrorType, InterpreterBase
 from value import Value
 from result import Result
-from btypes import TypeRegistry
+from btypes import Type, TypeRegistry
+from field import Field
+from method import Method
 
 
 class Object:
@@ -11,10 +13,68 @@ class Object:
     def __init__(self, interpreter_ref, class_def):
         self.interpreter_ref = interpreter_ref
         self.class_def = class_def
+        self.name = class_def.name
+        self.__fields = {}
+        self.__methods = {}
+        self.__super = None
 
-        # self.__instantiate_fields()
-        # self.__instantiate_methods()
-        # self.__possibly_instantiate_super()
+        # populates self.__fields
+        self.__instantiate_fields()
+        # populates self.__methods
+        self.__instantiate_methods()
+        # defines self.__super to be an Object or leaves it as None
+        self.__possibly_instantiate_super()
+    
+    @property
+    def status(self):
+        # a result indicating whether or not the fields and methods are instantiated / set correctly
+        for field in self.__fields.values():
+            if not field.status.ok:
+                return field.status
+        
+        for method in self.__methods.values():
+            if not method.status.ok:
+                return method.status
+        
+        return Result.Ok()
 
-    def execute_method(self, *args):
+    def get_method(self, method_name, argument_types, line_num_of_call=None):
+        if method_name in self.__methods:
+            method = self.__methods[method_name]
+            if method.matches_signature(argument_types):
+                return method
+        elif self.__super is None:
+            self.interpreter_ref.error(
+                ErrorType.NAME_ERROR,
+                f"Unknown method {method_name}",
+                line_num_of_call
+            )
+        else:
+            return self.__super.get_method(method_name, argument_types, line_num_of_call)
+
+    def execute_method(self, method_name, arguments=[], line_num_of_call=None):
+        # assume arguments is a list of Value objects
+        argument_types = [arg.type for arg in arguments]
+        method = self.get_method(method_name, argument_types, line_num_of_call)
+
+    def __execute_statement(self, statement_name, env, *args):
         pass
+
+    # TODO: call statement takes in a token specifying a name and uses an actual Object reference
+
+    def __instantiate_fields(self):
+        for field_name, field_def in self.class_def.get_field_defs().items():
+            self.__fields[field_name] = Field(field_def)
+        
+    def __instantiate_methods(self):
+        for method_name, method_def in self.class_def.get_method_defs().items():
+            self.__methods[method_name] = Method(method_def)
+    
+    def __possibly_instantiate_super(self):
+        # assume existence checking has already been done
+        superclass = TypeRegistry.get_super(self.name).unwrap()
+
+        # if this class does in fact inherit from something
+        if superclass != Type.CLASS:
+            self.__super = self.interpreter_ref.instantiate_class(superclass)
+        

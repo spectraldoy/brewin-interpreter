@@ -31,9 +31,9 @@ class Result:
         
     def __str__(self):
         if self.error is None:
-            return str(self.value)
+            return "Ok: " + str(self.value)
         else:
-            return str(self.error) + ": " + (str(self.message) if self.message else "")
+            return "Err: " + str(self.error) + ": " + (str(self.message) if self.message else "")
     
     def __repr__(self):
         return str(self)

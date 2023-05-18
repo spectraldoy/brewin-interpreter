@@ -1,6 +1,6 @@
 from intbase import InterpreterBase, ErrorType
 from result import Result
-from btypes import Type, TypeRegistry, str_to_type
+from btypes import Type, TypeRegistry, str_to_type, is_subclass_of
 
 
 class Value:
@@ -51,7 +51,6 @@ def create_value(val):
 
 
 def get_default_value(typ):
-    # TODO: should this use results?
     match typ:
         case Type.INT:
             return Value(Type.INT, 0)
@@ -68,5 +67,24 @@ def get_default_value(typ):
             if not res.ok:
                 return f"get_default_value({typ})"
             return get_default_value(res.unwrap())
+
+
+def get_default_value_as_brewin_literal(typ):
+    match typ:
+        case Type.INT:
+            return "0"
+        case Type.STRING:
+            return '""'
+        case Type.BOOL:
+            return InterpreterBase.FALSE_DEF
+        case Type.NOTHING:
+            return InterpreterBase.NOTHING_DEF
+        case typ if TypeRegistry.defines(typ):
+            return InterpreterBase.NULL_DEF
+        case _:
+            res = str_to_type(typ)
+            if not res.ok:
+                return f"get_default_value({typ})"
+            return get_default_value_as_brewin_literal(res.unwrap())
     
 

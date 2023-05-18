@@ -44,7 +44,11 @@ class Interpreter(InterpreterBase):
 
     def instantiate_class(self, class_name):
         class_def = self.get_class_def(class_name)
-        return Object(self, class_def)
+        ret = Object(self, class_def)
+        if not ret.status.ok:
+            super().error(*ret.status[1:])
+        
+        return ret
 
     def __define_class(self, parsed_class):
         if parsed_class[0] != InterpreterBase.CLASS_DEF:

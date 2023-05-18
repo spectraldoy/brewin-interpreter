@@ -48,10 +48,16 @@ class ClassDef:
 
         self.__extract_field_and_method_defs(class_def[body_starts_at:])
     
+    def get_field_defs(self):
+        return self.__field_defs
+
+    def get_method_defs(self):
+        return self.__method_defs
+    
     def __extract_field_and_method_defs(self, class_body):
         for member in class_body:
             if member[0] == InterpreterBase.FIELD_DEF:
-                field_name = member[1]
+                field_name = member[2]
                 if field_name in self.__field_defs:
                     return self.interpreter_ref.error(
                         ErrorType.NAME_ERROR,
@@ -62,7 +68,7 @@ class ClassDef:
                 self.__field_defs[field_name] = FieldDef(*member[1:])
 
             elif member[0] == InterpreterBase.METHOD_DEF:
-                method_name = member[1]
+                method_name = member[2]
                 if method_name in self.__method_defs:
                     return self.interpreter_ref.error(
                         ErrorType.NAME_ERROR,
