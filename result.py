@@ -21,6 +21,8 @@ class Result:
     
     def unwrap(self):
         # because I use the word value a lot everywhere this is
+        if not self.ok:
+            raise TypeError("Cannot unwrap not-ok Result")
         return self.value
     
     def __getitem__(self, idx):

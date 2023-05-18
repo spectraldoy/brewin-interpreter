@@ -1,5 +1,5 @@
 from value import Value, create_value
-from utils import Result
+from result import Result
 from btypes import str_to_type, is_subclass_of
 from intbase import ErrorType
 
@@ -10,8 +10,11 @@ class Field:
         self.name = field_def.name
         # defines self.value
         self.__set_to_field_def(field_def.type, field_def.value)
-  
+
     def __set_to_field_def(self, field_type, field_value):
+        if not self.status.ok:
+            return
+
         type_res = str_to_type(field_type)
         if not type_res.ok:
             self.status = type_res
@@ -46,6 +49,8 @@ class Field:
         self.set_to_value(other.value)
 
     def set_to_value(self, value):
+        if not self.status.ok:
+            return
         # set this field to hold value, assuming value is a Value
         if not is_subclass_of(value.type, self.value.type):
             self.status = Result.Err(

@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from utils import Result
+from result import Result
 from intbase import InterpreterBase, ErrorType
 
 class Type(Enum):

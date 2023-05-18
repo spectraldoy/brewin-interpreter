@@ -1,6 +1,6 @@
 from intbase import InterpreterBase, ErrorType
-from utils import Result
-from btypes import Type, TypeRegistry
+from result import Result
+from btypes import Type, TypeRegistry, str_to_type
 
 
 class Value:
@@ -51,19 +51,22 @@ def create_value(val):
 
 
 def get_default_value(typ):
+    # TODO: should this use results?
     match typ:
         case Type.INT:
-            out = Value(Type.INT, 0)
+            return Value(Type.INT, 0)
         case Type.STRING:
-            out = Value(Type.STRING, "")
+            return Value(Type.STRING, "")
         case Type.BOOL:
-            out = Value(Type.BOOL, False)
+            return Value(Type.BOOL, False)
         case Type.NOTHING:
-            out = Value(Type.NOTHING, None)
+            return Value(Type.NOTHING, None)
         case typ if TypeRegistry.defines(typ):
-            out = Value(Type.CLASS, None) # null by default for Type.CLASS and all classes
+            return Value(Type.CLASS, None) # null by default for Type.CLASS and all classes
         case _:
-            return Result.Err(ErrorType.TYPE_ERROR, f"No class named {typ} found")
+            res = str_to_type(typ)
+            if not res.ok:
+                return f"get_default_value({typ})"
+            return get_default_value(res.unwrap())
     
-    return Result.Ok(out)
 
