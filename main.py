@@ -1,5 +1,5 @@
-from bparser import BParser
-from argparse import ArgumentParser    
+from interpreterv2 import Interpreter
+from argparse import ArgumentParser
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -10,7 +10,6 @@ if __name__ == "__main__":
     with open(args.source, "r") as f:
         data = f.readlines()
     
-    status, parsed_program = BParser.parse(data)
-
-    print(parsed_program)
+    inter = Interpreter()
+    inter.run(data)
 

@@ -59,7 +59,7 @@ class ClassDef:
                         field_name.line_num
                     )
                 
-                self.__fields_defs[field_name] = FieldDef(*member[1:])
+                self.__field_defs[field_name] = FieldDef(*member[1:])
 
             elif member[0] == InterpreterBase.METHOD_DEF:
                 method_name = member[1]

@@ -28,7 +28,7 @@ class TypeRegistry:
         return class_name in cls.__register
     
     @classmethod
-    def get(cls, class_name):
+    def get_super(cls, class_name):
         if not cls.defines(class_name):
             return Result.Err(ErrorType.TYPE_ERROR, f"No class named {class_name} found")
         
@@ -36,7 +36,7 @@ class TypeRegistry:
 
     @classmethod
     def get_all_supers(cls, class_name):
-        res = cls.get(class_name)
+        res = cls.get_super(class_name)
         if not res.ok:
             return res
         
@@ -52,7 +52,10 @@ class TypeRegistry:
     @classmethod
     def register(cls, class_name, inherits):
         if cls.defines(class_name):
-            return Result.Err(ErrorType.TYPE_ERROR, f"Attempted duplicate definition of class {class_name}")
+            return Result.Err(ErrorType.TYPE_ERROR, f"Attempted duplicate definition of type {class_name}")
+        
+        if not cls.defines(inherits):
+            return Result.Err(ErrorType.TYPE_ERROR, f"Attempt to inherit from unknown type {inherits}")
         
         cls.__register[class_name] = inherits
         return Result.Ok()
