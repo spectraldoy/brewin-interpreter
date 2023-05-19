@@ -80,7 +80,7 @@ class Object:
                 formal_param_field = formal_param
             else:
                 formal_param_field = copy.deepcopy(formal_param)
-            formal_param_field.set(arg)
+            formal_param_field.set_to_value(arg)
             env.set(formal_param_name, formal_param_field)
         
         status, return_value = self.__execute_statement(env, method.statement)
@@ -146,6 +146,20 @@ class Object:
         else_block = None if len(code) != 4 else code[3]
 
         evaluated_condition = self.__evaluate_expression(env, condition, code[0].line_num)
+        if evaluated_condition.type != Type.BOOL:
+            self.interpreter_ref.error(
+                ErrorType.TYPE_ERROR,
+                f"Condition of {InterpreterBase.IF_DEF} does not evaluate to a {InterpreterBase.BOOL_DEF}",
+                code[0].line_num
+            )
+        
+        evaluated_condition = evaluated_condition.value
+        if evaluated_condition:
+            return self.__execute_statement(env, if_block)
+        elif else_block is not None:
+            return self.__execute_statement(env, else_block)
+        
+        return Object.STATUS_PROCEED, Value(Type.NOTHING)
     
     def __execute_while(self, env, code):
         return Object.STATUS_PROCEED, Value(Type.NOTHING)
@@ -163,6 +177,16 @@ class Object:
         return Object.STATUS_PROCEED, Value(Type.NOTHING)
 
     def __execute_print(self, env, code):
+        def convert_to_brewin_literal(val):
+            if val.type == Type.BOOL:
+                return InterpreterBase.TRUE_DEF if val.value else InterpreterBase.FALSE_DEF
+            return str(val.value)
+
+        evald_exprs = [self.__evaluate_expression(env, expr, code[0].line_num) for expr in code[1:]]
+        output = "".join(map(convert_to_brewin_literal, evald_exprs))
+
+        self.interpreter_ref.output(output)
+
         return Object.STATUS_PROCEED, Value(Type.NOTHING)
 
     def __execute_let(self, env, code):
@@ -200,7 +224,7 @@ class Object:
                     line_num_of_expr
                 )
             
-            operand1, operand2 = [self.__evaluate_expression(env, arg, arg[0].line_num) for arg in args]
+            operand1, operand2 = [self.__evaluate_expression(env, arg, line_num_of_expr) for arg in args]
 
             # Object types can only be operated on if they are sub / super classes of each other
             if is_subclass_of(operand1.type, Type.CLASS) and is_subclass_of(operand2.type, Type.CLASS):
@@ -238,7 +262,7 @@ class Object:
                     line_num_of_expr
                 )
 
-            operand = self.__evaluate_expression(env, args[0], args[0][0].line_num)
+            operand = self.__evaluate_expression(env, args[0], line_num_of_expr)
             if operand.type not in self.interpreter_ref.unary_ops:
                 self.interpreter_ref.error(
                     ErrorType.TYPE_ERROR,
@@ -259,6 +283,8 @@ class Object:
 
         if operator == InterpreterBase.CALL_DEF:
             return self.__execute_call_aux(env, expr)
+
+        self.interpreter_ref.error(ErrorType.SYNTAX_ERROR, "blah", line_num_of_expr)
     
     def __execute_new_aux(self, class_name, line_num_of_new=None):
         obj = self.interpreter_ref.instantiate_class(class_name, line_num_of_new)
@@ -290,7 +316,7 @@ class Object:
             )
         
         method_name, *args = expr[2:]
-        args_as_values = [self.__evaluate_expression(arg) for arg in args]
+        args_as_values = [self.__evaluate_expression(env, arg, line_num_of_call) for arg in args]
 
         return obj.execute_method(method_name, args_as_values, line_num_of_call)
 

@@ -50,8 +50,8 @@ class Interpreter(InterpreterBase):
         "!": lambda a: Value(Type.BOOL, not a.value)
     }
 
-    binary_op_set = set(binary_ops.keys())
-    unary_op_set = set(unary_ops.keys())
+    binary_op_set = set.union(*[set(ops_for_type.keys()) for ops_for_type in binary_ops.values()])
+    unary_op_set = set.union(*[set(ops_for_type.keys()) for ops_for_type in unary_ops.values()])
 
     def __init__(self, console_output=True, inp=None, trace_output=False):
         super().__init__(console_output, inp)
