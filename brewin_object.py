@@ -9,7 +9,6 @@ from method import Method
 
 
 class Object:
-    # TODO: expressions should be static variables of the Interpreter class
     STATUS_PROCEED = 0
     STATUS_RETURN = 1
     STATUS_ERR = 2
@@ -63,6 +62,7 @@ class Object:
         method = self.get_method(method_name, argument_types, line_num_of_call)
 
         # create a new lexical environment for this method call
+        # when you call a method, it cannot see the variables outside its scope
         env = LexicalEnvironment()
 
         for formal_param, arg in zip(method.params_as_fields, arguments):
@@ -75,7 +75,12 @@ class Object:
                 )
 
             # create a copy of the method's field
-            formal_param_field = copy.deepcopy(formal_param)
+            if is_subclass_of(formal_param.type, Type.CLASS):
+                # pass objects by reference, not by value
+                # TODO: check this works
+                formal_param_field = formal_param
+            else:
+                formal_param_field = copy.deepcopy(formal_param)
             formal_param_field.set(arg)
             env.set(formal_param_name, formal_param_field)
         
@@ -94,7 +99,7 @@ class Object:
         # return the default value for the return type
         return get_default_value(method.return_type)
 
-    def __execute_statement(self, env, statement, *args):
+    def __execute_statement(self, env, statement):
         return Object.STATUS_PROCEED, get_default_value(Type.NOTHING)
 
     # TODO: call statement takes in a token specifying a name and uses an actual Object reference to call the method

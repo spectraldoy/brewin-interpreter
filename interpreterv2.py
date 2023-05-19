@@ -2,14 +2,53 @@ from bparser import BParser
 from intbase import InterpreterBase, ErrorType
 from brewin_object import Object
 from classdef import ClassDef
+from btypes import Type
+from value import Value
 
 class Interpreter(InterpreterBase):
-    
-    def define_operations(self):
-        # Valid Assumption: There will only be one instance of the Interpreter Class
-        # any time this Brewin++ interpreter is run
-        # don't make it more complicated than it needs to be
-        pass
+    # define builtin operations
+    binary_ops = {}
+    binary_ops[Type.INT] = {
+        "+": lambda a, b: Value(Type.INT, a.value + b.value),
+        "-": lambda a, b: Value(Type.INT, a.value - b.value),
+        "*": lambda a, b: Value(Type.INT, a.value * b.value),
+        "/": lambda a, b: Value(Type.INT, a.value // b.value),
+        "%": lambda a, b: Value(Type.INT, a.value % b.value),
+        "==": lambda a, b: Value(Type.BOOL, a.value == b.value),
+        "!=": lambda a, b: Value(Type.BOOL, a.value != b.value),
+        ">": lambda a, b: Value(Type.BOOL, a.value > b.value),
+        "<": lambda a, b: Value(Type.BOOL, a.value < b.value),
+        ">=": lambda a, b: Value(Type.BOOL, a.value >= b.value),
+        "<=": lambda a, b: Value(Type.BOOL, a.value <= b.value),
+    }
+
+    binary_ops[Type.STRING] = {
+        "+": lambda a, b: Value(Type.STRING, a.value + b.value),
+        "==": lambda a, b: Value(Type.BOOL, a.value == b.value),
+        "!=": lambda a, b: Value(Type.BOOL, a.value != b.value),
+        ">": lambda a, b: Value(Type.BOOL, a.value > b.value),
+        "<": lambda a, b: Value(Type.BOOL, a.value < b.value),
+        ">=": lambda a, b: Value(Type.BOOL, a.value >= b.value),
+        "<=": lambda a, b: Value(Type.BOOL, a.value <= b.value),
+    }
+
+    binary_ops[Type.BOOL] = {
+        "&": lambda a, b: Value(Type.BOOL, a.value and b.value),
+        "|": lambda a, b: Value(Type.BOOL, a.value or b.value),
+        "==": lambda a, b: Value(Type.BOOL, a.value == b.value),
+        "!=": lambda a, b: Value(Type.BOOL, a.value != b.value)
+    }
+
+    # check equality of identity for objects
+    binary_ops[Type.CLASS] = {
+        "==": lambda a, b: Value(Type.BOOL, a.value is b.value),
+        "!=": lambda a, b: Value(Type.BOOL, a.value is not b.value)
+    }
+
+    unary_ops = {}
+    unary_ops[Type.BOOL] = {
+        "!": lambda a: Value(Type.BOOL, not a.value)
+    }
 
     def __init__(self, console_output=True, inp=None, trace_output=False):
         super().__init__(console_output, inp)
@@ -67,3 +106,4 @@ class Interpreter(InterpreterBase):
             )
         
         self.__class_definitions[name] = ClassDef(parsed_class, self)
+
