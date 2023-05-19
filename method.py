@@ -61,8 +61,4 @@ class Method:
             
         
         self.params_as_fields = params_as_fields
-    
-
-    # TODO: but still get an environment out of the Method class by copying and setting its params_as_fields
-    # TODO: and then use that in the call function
 

@@ -30,9 +30,6 @@ class Field:
         desired_type = type_res.unwrap()
         desired_value = value_res.unwrap()
 
-        # TODO: just an equality check is not enough
-        # TODO: we need to do the polymorphism search thing
-        # TODO: should create a function for that
         if not is_subclass_of(desired_value.type, desired_type):
             self.status = Result.Err(
                 ErrorType.TYPE_ERROR,

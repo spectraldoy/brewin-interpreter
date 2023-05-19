@@ -73,6 +73,7 @@ class Interpreter(InterpreterBase):
         
         # second pass: instantiate and run main
         self.main_object = self.instantiate_class(InterpreterBase.MAIN_CLASS_DEF)
+        # according to Barista, main doesn't have to have void return type I guess
         self.main_object.execute_method(InterpreterBase.MAIN_FUNC_DEF)
         
     def get_class_def(self, class_name):

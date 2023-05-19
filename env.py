@@ -1,4 +1,3 @@
-from result import Result
 from intbase import ErrorType
 
 class LexicalEnvironment:
@@ -13,15 +12,11 @@ class LexicalEnvironment:
     
     def get(self, symbol):
         if symbol not in self.__environment:
-            return Result.Err(
-                ErrorType.NAME_ERROR,
-                f"Symbol {symbol} not found"
-            )
+            return None
         
-        return Result.Ok(self.__environment[symbol])
+        return self.__environment[symbol]
     
     def set(self, symbol, field):
-        # TODO: type checking on field
         self.__environment[symbol] = field
     
     def __contains__(self, symbol):

@@ -6,6 +6,7 @@ from result import Result
 from btypes import Type, TypeRegistry, is_subclass_of
 from field import Field
 from method import Method
+from classdef import FieldDef
 
 class Object:
     STATUS_PROCEED = 0
@@ -81,6 +82,10 @@ class Object:
             else:
                 formal_param_field = copy.deepcopy(formal_param)
             formal_param_field.set_to_value(arg)
+            if not formal_param_field.status.ok:
+                self.interpreter_ref.error(
+                    *formal_param_field.status[1:]
+                )
             env.set(formal_param_name, formal_param_field)
         
         status, return_value = self.__execute_statement(env, method.statement)
@@ -138,7 +143,10 @@ class Object:
         return Object.STATUS_PROCEED, Value(Type.NOTHING)
 
     def __execute_set(self, env, code):
-        pass
+        # (set var (expr))
+        val = self.__evaluate_expression(env, code[2], code[0].line_num)
+        self.__execute_set_aux(env, code[1], val, code[0].line_num)
+        return Object.STATUS_PROCEED, Value(Type.NOTHING)
 
     def __execute_if(self, env, code):
         condition = code[1]
@@ -149,7 +157,7 @@ class Object:
         if evaluated_condition.type != Type.BOOL:
             self.interpreter_ref.error(
                 ErrorType.TYPE_ERROR,
-                f"Condition of {InterpreterBase.IF_DEF} does not evaluate to a {InterpreterBase.BOOL_DEF}",
+                f"Condition of {InterpreterBase.IF_DEF} did not evaluate to a {InterpreterBase.BOOL_DEF}",
                 code[0].line_num
             )
         
@@ -162,6 +170,27 @@ class Object:
         return Object.STATUS_PROCEED, Value(Type.NOTHING)
     
     def __execute_while(self, env, code):
+        # (while (cond) (statement))
+        cond = code[1]
+        statement = code[2]
+
+        while True:
+            evaluated_condition = self.__evaluate_expression(env, cond, code[0].line_num)
+            if evaluated_condition.type != Type.BOOL:
+                self.interpreter_ref.error(
+                    ErrorType.TYPE_ERROR,
+                    f"Condition of {InterpreterBase.WHILE_DEF} did not evaluate to a {InterpreterBase.BOOL_DEF}",
+                    code[0].line_num
+                )
+            
+            proceed = evaluated_condition.value
+            if not proceed:
+                break
+
+            status, return_value = self.__execute_statement(env, statement)
+            if status == Object.STATUS_RETURN:
+                return status, return_value
+
         return Object.STATUS_PROCEED, Value(Type.NOTHING)
 
     def __execute_call(self, env, code):
@@ -177,9 +206,17 @@ class Object:
         return Object.STATUS_RETURN, out
 
     def __execute_inputi(self, env, code):
+        var_name = code[1]
+        inp = int(self.interpreter_ref.get_input())
+        val = Value(Type.INT, inp)
+        self.__execute_set_aux(env, var_name, val, code[0].line_num)
         return Object.STATUS_PROCEED, Value(Type.NOTHING)
 
     def __execute_inputs(self, env, code):
+        var_name = code[1]
+        inp = self.interpreter_ref.get_input()
+        val = Value(Type.STRING, inp)
+        self.__execute_set_aux(env, var_name, val, code[0].line_num)
         return Object.STATUS_PROCEED, Value(Type.NOTHING)
 
     def __execute_print(self, env, code):
@@ -196,6 +233,35 @@ class Object:
         return Object.STATUS_PROCEED, Value(Type.NOTHING)
 
     def __execute_let(self, env, code):
+        # (let ( (t1 p1) (t2 p2) ... )
+        #   (stmt1) (stmt2) ... )
+        let_kw, local_var_defs, *statements = code
+        env = copy.copy(env)
+
+        # initialize all the locals and put them in the new env
+        for local_type, local_name, local_initial_value in local_var_defs:
+            # locals shadow over env and self.fields
+            local_as_field_def = FieldDef(
+                local_type,
+                local_name,
+                local_initial_value
+            )
+
+            # local variables must have an initial value specified
+            # and in Barista, they cannot be initialized with values of class fields
+            local_field = Field(local_as_field_def)
+            if not local_field.status.ok:
+                local_field.status.line_num = let_kw.line_num
+                self.interpreter_ref.error(*local_field.status[1:])
+            
+            env.set(local_name, local_field)
+        
+        # execute the statements
+        for statement in statements:
+            status, return_value = self.__execute_statement(env, statement)
+            if status == Object.STATUS_RETURN:
+                return status, return_value
+        
         return Object.STATUS_PROCEED, Value(Type.NOTHING)
 
     def __evaluate_expression(self, env, expr, line_num_of_expr):
@@ -203,9 +269,9 @@ class Object:
         if not isinstance(expr, list):
             # environment shadows over fields
             env_res = env.get(expr)
-            if env_res.ok:
+            if env_res is not None:
                 # the env stores field: get the Value out
-                return env_res.unwrap().value
+                return env_res.value
             
             if expr in self.__fields:
                 # get the Value object out of the field
@@ -292,6 +358,28 @@ class Object:
 
         self.interpreter_ref.error(ErrorType.SYNTAX_ERROR, "blah", line_num_of_expr)
     
+    def __execute_set_aux(self, env, var_name, val, line_num):
+        if val.type == Type.NOTHING:
+            self.interpreter_ref.error(
+                ErrorType.TYPE_ERROR,
+                f"Attempt to assign a field to {InterpreterBase.NOTHING_DEF}",
+                line_num
+            )
+
+        # env shadows over fields
+        if var_name in env:
+            field = env.get(var_name)
+        elif var_name in self.__fields:
+            field = self.__fields[var_name]
+        else:
+            self.interpreter_ref.error(
+                ErrorType.NAME_ERROR,
+                f"Attempt to set unknown field / parameter {var_name}",
+                line_num
+            )
+        
+        field.set_to_value(val)
+
     def __execute_new_aux(self, class_name, line_num_of_new=None):
         obj = self.interpreter_ref.instantiate_class(class_name, line_num_of_new)
         # the type of this value is the class's name
