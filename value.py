@@ -1,6 +1,6 @@
 from intbase import InterpreterBase, ErrorType
 from result import Result
-from btypes import Type, TypeRegistry, str_to_type, is_subclass_of
+from btypes import Type, TypeRegistry, str_to_type
 
 
 class Value:
@@ -29,6 +29,9 @@ class Value:
     def set(self, new_value):
         self.__type = new_value.type
         self.__value = new_value.value
+    
+    def is_null(self):
+        return self.type == Type.CLASS and self.value is None
 
 
 def create_value(val):
@@ -58,6 +61,8 @@ def get_default_value(typ):
             return Value(Type.STRING, "")
         case Type.BOOL:
             return Value(Type.BOOL, False)
+        case Type.NULL:
+            return Value(Type.NULL, None)
         case Type.NOTHING:
             return Value(Type.NOTHING, None)
         case typ if TypeRegistry.defines(typ):
@@ -77,6 +82,8 @@ def get_default_value_as_brewin_literal(typ):
             return '""'
         case Type.BOOL:
             return InterpreterBase.FALSE_DEF
+        case Type.NULL:
+            return InterpreterBase.NULL_DEF
         case Type.NOTHING:
             return InterpreterBase.NOTHING_DEF
         case typ if TypeRegistry.defines(typ):

@@ -9,6 +9,7 @@ class Type(Enum):
     INT = auto()
     STRING = auto()
     BOOL = auto()
+    NULL = auto()
     NOTHING = auto()
     CLASS = auto()
 
@@ -20,6 +21,8 @@ class Type(Enum):
                 return InterpreterBase.STRING_DEF
             case Type.BOOL:
                 return InterpreterBase.BOOL_DEF
+            case Type.NULL:
+                return InterpreterBase.NULL_DEF
             case Type.NOTHING:
                 return InterpreterBase.NOTHING_DEF
             case Type.CLASS:
@@ -54,6 +57,9 @@ class TypeRegistry:
 
     @classmethod
     def get_all_supers(cls, class_name):
+        if class_name == Type.NULL:
+            return cls.entries()
+
         res = cls.get_super(class_name)
         if not res.ok:
             return res
@@ -65,7 +71,7 @@ class TypeRegistry:
             if not super_sups_res.ok:
                 return super_sups_res
             
-            return Result.Ok(set([res]) | super_sups_res.unwrap())
+            return Result.Ok(set([res.unwrap()]) | super_sups_res.unwrap())
             
     @classmethod
     def register(cls, class_name, inherits):
@@ -77,6 +83,10 @@ class TypeRegistry:
         
         cls.__register[class_name] = inherits
         return Result.Ok()
+    
+    @classmethod
+    def entries(cls):
+        return set(cls.__register.keys())
 
 
 def str_to_type(string):
@@ -87,6 +97,8 @@ def str_to_type(string):
             out = Type.STRING
         case InterpreterBase.BOOL_DEF:
             out = Type.BOOL
+        case InterpreterBase.NULL_DEF:
+            out = Type.NULL
         case InterpreterBase.VOID_DEF:
             out = Type.NOTHING
         case string if TypeRegistry.defines(string):
@@ -107,4 +119,3 @@ def is_subclass_of(typ1, typ2):
         return False
     
     return typ2 in supers_of_typ1_res.unwrap()
-

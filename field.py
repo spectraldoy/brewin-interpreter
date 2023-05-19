@@ -1,6 +1,6 @@
-from value import Value, create_value
+from value import create_value
 from result import Result
-from btypes import str_to_type, is_subclass_of
+from btypes import str_to_type, is_subclass_of, Type
 from intbase import ErrorType
 
 class Field:
@@ -52,7 +52,8 @@ class Field:
         if not self.status.ok:
             return
         # set this field to hold value, assuming value is a Value
-        if not is_subclass_of(value.type, self.value.type):
+        if is_subclass_of(value.type, Type.CLASS) and not value.is_null() and \
+            not is_subclass_of(value.type, self.type):
             self.status = Result.Err(
                 ErrorType.TYPE_ERROR,
                 f"Type mismatch while setting {self.name}: {self.value} is not of type {value.type}"

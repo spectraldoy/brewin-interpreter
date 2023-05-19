@@ -46,7 +46,7 @@ class Object:
         if method_name in self.__methods:
             method = self.__methods[method_name]
             if method.matches_signature(argument_types):
-                return method
+                return self, method
         elif self.__super is None:
             self.interpreter_ref.error(
                 ErrorType.NAME_ERROR,
@@ -54,12 +54,13 @@ class Object:
                 line_num_of_call
             )
         else:
+            # have to return the super object to call it from
             return self.__super.get_method(method_name, argument_types, line_num_of_call)
 
     def execute_method(self, method_name, arguments=[], line_num_of_call=None):
         # assume arguments is a list of Value objects
         argument_types = [arg.type for arg in arguments]
-        method = self.get_method(method_name, argument_types, line_num_of_call)
+        obj, method = self.get_method(method_name, argument_types, line_num_of_call)
 
         # create a new lexical environment for this method call
         # when you call a method, it cannot see the variables outside its scope
@@ -77,7 +78,6 @@ class Object:
             # create a copy of the method's field
             if is_subclass_of(formal_param.type, Type.CLASS):
                 # pass objects by reference, not by value
-                # TODO: check this works
                 formal_param_field = formal_param
             else:
                 formal_param_field = copy.deepcopy(formal_param)
@@ -88,17 +88,18 @@ class Object:
                 )
             env.set(formal_param_name, formal_param_field)
         
-        status, return_value = self.__execute_statement(env, method.statement)
+        status, return_value = obj.__execute_statement(env, method.statement)
         if status == Object.STATUS_RETURN:
             # type check the return values
             if is_subclass_of(return_value.type, method.return_type):
                 return return_value
             
-            self.interpreter_ref.error(
-                ErrorType.TYPE_ERROR,
-                f"Mismatched types: expected {method.return_type} but got {return_value.type}",
-                line_num_of_call
-            )
+            if return_value.type != Type.NOTHING:
+                self.interpreter_ref.error(
+                    ErrorType.TYPE_ERROR,
+                    f"Mismatched types: expected {method.return_type} but got {return_value.type}",
+                    line_num_of_call
+                )
         
         # return the default value for the return type
         return get_default_value(method.return_type)
@@ -400,7 +401,7 @@ class Object:
             obj = self.__super
         else:
             # evaluate_expression returns a Value object: this gets the actual value out of it
-            obj = self.__evaluate_expression(env, expr, line_num_of_call).value
+            obj = self.__evaluate_expression(env, obj_name, line_num_of_call).value
 
         if obj is None:
             self.interpreter_ref.error(
