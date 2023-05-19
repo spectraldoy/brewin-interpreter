@@ -24,4 +24,7 @@ class LexicalEnvironment:
         # TODO: type checking on field
         self.__environment[symbol] = field
     
+    def __contains__(self, symbol):
+        return symbol in self.__environment
+    
 

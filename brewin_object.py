@@ -1,14 +1,18 @@
+import copy
 from env import LexicalEnvironment
 from intbase import ErrorType, InterpreterBase
-from value import Value
+from value import Value, get_default_value
 from result import Result
-from btypes import Type, TypeRegistry
+from btypes import Type, TypeRegistry, is_subclass_of
 from field import Field
 from method import Method
 
 
 class Object:
     # TODO: expressions should be static variables of the Interpreter class
+    STATUS_PROCEED = 0
+    STATUS_RETURN = 1
+    STATUS_ERR = 2
 
     def __init__(self, interpreter_ref, class_def):
         self.interpreter_ref = interpreter_ref
@@ -39,6 +43,7 @@ class Object:
         return Result.Ok()
 
     def get_method(self, method_name, argument_types, line_num_of_call=None):
+        # search for 
         if method_name in self.__methods:
             method = self.__methods[method_name]
             if method.matches_signature(argument_types):
@@ -57,10 +62,42 @@ class Object:
         argument_types = [arg.type for arg in arguments]
         method = self.get_method(method_name, argument_types, line_num_of_call)
 
-    def __execute_statement(self, statement_name, env, *args):
-        pass
+        # create a new lexical environment for this method call
+        env = LexicalEnvironment()
 
-    # TODO: call statement takes in a token specifying a name and uses an actual Object reference
+        for formal_param, arg in zip(method.params_as_fields, arguments):
+            formal_param_name = formal_param.name
+            if formal_param_name in env:
+                self.interpreter_ref.error(
+                    ErrorType.NAME_ERROR,
+                    f"Duplicate formal parameter name {formal_param_name}",
+                    formal_param_name.line_num
+                )
+
+            # create a copy of the method's field
+            formal_param_field = copy.deepcopy(formal_param)
+            formal_param_field.set(arg)
+            env.set(formal_param_name, formal_param_field)
+        
+        status, return_value = self.__execute_statement(env, method.statement)
+        if status == Object.STATUS_RETURN:
+            # type check the return values
+            if is_subclass_of(return_value.type, method.return_type):
+                return return_value
+            
+            self.interpreter_ref.error(
+                ErrorType.TYPE_ERROR,
+                f"Mismatched types: expected {method.return_type} but got {return_value.type}",
+                line_num_of_call
+            )
+        
+        # return the default value for the return type
+        return get_default_value(method.return_type)
+
+    def __execute_statement(self, env, statement, *args):
+        return Object.STATUS_PROCEED, get_default_value(Type.NOTHING)
+
+    # TODO: call statement takes in a token specifying a name and uses an actual Object reference to call the method
 
     def __instantiate_fields(self):
         for field_name, field_def in self.class_def.get_field_defs().items():
