@@ -50,6 +50,9 @@ class Interpreter(InterpreterBase):
         "!": lambda a: Value(Type.BOOL, not a.value)
     }
 
+    binary_op_set = set(binary_ops.keys())
+    unary_op_set = set(unary_ops.keys())
+
     def __init__(self, console_output=True, inp=None, trace_output=False):
         super().__init__(console_output, inp)
         self.trace_output = trace_output
@@ -81,10 +84,11 @@ class Interpreter(InterpreterBase):
         
         return self.__class_definitions[class_name]
 
-    def instantiate_class(self, class_name):
+    def instantiate_class(self, class_name, line_num=None):
         class_def = self.get_class_def(class_name)
         ret = Object(self, class_def)
         if not ret.status.ok:
+            ret.status.line_num = line_num
             super().error(*ret.status[1:])
         
         return ret

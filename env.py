@@ -15,7 +15,7 @@ class LexicalEnvironment:
         if symbol not in self.__environment:
             return Result.Err(
                 ErrorType.NAME_ERROR,
-                f"Tried to access invalid field or parameter {symbol}"
+                f"Symbol {symbol} not found"
             )
         
         return Result.Ok(self.__environment[symbol])

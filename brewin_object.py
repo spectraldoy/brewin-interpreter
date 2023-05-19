@@ -1,12 +1,11 @@
 import copy
 from env import LexicalEnvironment
 from intbase import ErrorType, InterpreterBase
-from value import Value, get_default_value
+from value import Value, get_default_value, create_value
 from result import Result
 from btypes import Type, TypeRegistry, is_subclass_of
 from field import Field
 from method import Method
-
 
 class Object:
     STATUS_PROCEED = 0
@@ -100,9 +99,200 @@ class Object:
         return get_default_value(method.return_type)
 
     def __execute_statement(self, env, statement):
-        return Object.STATUS_PROCEED, get_default_value(Type.NOTHING)
+        name = statement[0]
 
-    # TODO: call statement takes in a token specifying a name and uses an actual Object reference to call the method
+        match name:
+            case InterpreterBase.BEGIN_DEF:
+                return self.__execute_begin(env, statement)
+            case InterpreterBase.SET_DEF:
+                return self.__execute_set(env, statement)
+            case InterpreterBase.IF_DEF:
+                return self.__execute_if(env, statement)
+            case InterpreterBase.WHILE_DEF:
+                return self.__execute_while(env, statement)
+            case InterpreterBase.CALL_DEF:
+                return self.__execute_call(env, statement)
+            case InterpreterBase.RETURN_DEF:
+                return self.__execute_return(env, statement)
+            case InterpreterBase.INPUT_INT_DEF:
+                return self.__execute_inputi(env, statement)
+            case InterpreterBase.INPUT_STRING_DEF:
+                return self.__execute_inputs(env, statement)
+            case InterpreterBase.PRINT_DEF:
+                return self.__execute_print(env, statement)
+            case InterpreterBase.LET_DEF:
+                return self.__execute_let(env, statement)
+            case _:
+                self.interpreter_ref.error(
+                    ErrorType.SYNTAX_ERROR,
+                    f"Attempt to execute undefined statement {name}",
+                    name.line_num
+                )
+
+    def __execute_begin(self, env, code):
+        for statement in code[1:]:
+            status, return_value = self.__execute_statement(env, statement)
+            if status == Object.STATUS_RETURN:
+                return status, return_value
+        
+        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+
+    def __execute_set(self, env, code):
+        pass
+
+    def __execute_if(self, env, code):
+        condition = code[1]
+        if_block = code[2]
+        else_block = None if len(code) != 4 else code[3]
+
+        evaluated_condition = self.__evaluate_expression(env, condition, code[0].line_num)
+    
+    def __execute_while(self, env, code):
+        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+
+    def __execute_call(self, env, code):
+        return Object.STATUS_PROCEED, self.__execute_call_aux(env, code, code[0].line_num)
+
+    def __execute_return(self, env, code):
+        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+
+    def __execute_inputi(self, env, code):
+        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+
+    def __execute_inputs(self, env, code):
+        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+
+    def __execute_print(self, env, code):
+        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+
+    def __execute_let(self, env, code):
+        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+
+    def __evaluate_expression(self, env, expr, line_num_of_expr):
+        # expressions can be brewin literals
+        if not isinstance(expr, list):
+            # environment shadows over fields
+            env_res = env.get(expr)
+            if env_res.ok:
+                # the env stores field: get the Value out
+                return env_res.unwrap().value
+            
+            if expr in self.__fields:
+                # get the Value object out of the field
+                return self.__fields[expr].value
+            
+            val_res = create_value(expr)
+            if not val_res.ok:
+                val_res.line_num = line_num_of_expr
+                self.interpreter_ref.error(*val_res[1:])
+            
+            return val_res.unwrap()
+        
+        # otherwise an expression is an operator with arguments
+        operator, *args = expr
+
+        # evaluate the expression only if the operator expects it
+        if operator in self.interpreter_ref.binary_op_set:
+            if len(args) != 2:
+                self.interpreter_ref.error(
+                    ErrorType.SYNTAX_ERROR,
+                    f"Invalid number of arguments to binary operator {operator}",
+                    line_num_of_expr
+                )
+            
+            operand1, operand2 = [self.__evaluate_expression(env, arg, arg[0].line_num) for arg in args]
+
+            # Object types can only be operated on if they are sub / super classes of each other
+            if is_subclass_of(operand1.type, Type.CLASS) and is_subclass_of(operand2.type, Type.CLASS):
+                if is_subclass_of(operand1.type, operand2.type) or is_subclass_of(operand2.type, operand1.type):
+                    return self.interpreter_ref.binary_ops[Type.CLASS][operator](operand1, operand2)
+                else:
+                    self.interpreter_ref.error(
+                        ErrorType.TYPE_ERROR,
+                        f"Cannot perform {operator} on unrelated object types {operand1.type} and {operand2.type}",
+                        line_num_of_expr
+                    )
+
+            if operand1.type != operand2.type:
+                self.interpreter_ref.error(
+                    ErrorType.TYPE_ERROR,
+                    f"{operator} attempted on incompatible types {operand1.type} and {operand2.type}",
+                    line_num_of_expr
+                )
+
+            # by this point, operand1.type == operand2.type
+            if operand1.type not in self.interpreter_ref.binary_ops:
+                self.interpreter_ref.error(
+                    ErrorType.TYPE_ERROR,
+                    f"binary operator {operator} not defined for type {operand1.type}",
+                    line_num_of_expr
+                )
+            
+            return self.interpreter_ref.binary_ops[operand1.type][operator](operand1, operand2)
+        
+        if operator in self.interpreter_ref.unary_op_set:
+            if len(args) != 1:
+                self.interpreter_ref.error(
+                    ErrorType.SYNTAX_ERROR,
+                    f"Invalid number of arguments to unary operator {operator}",
+                    line_num_of_expr
+                )
+
+            operand = self.__evaluate_expression(env, args[0], args[0][0].line_num)
+            if operand.type not in self.interpreter_ref.unary_ops:
+                self.interpreter_ref.error(
+                    ErrorType.TYPE_ERROR,
+                    f"unary operator {operator} not defined for type {operand.type}",
+                    line_num_of_expr
+                )
+            
+            return self.interpreter_ref.unary_ops[operand.type][operator](operand)
+
+        if operator == InterpreterBase.NEW_DEF:
+            if len(args) != 1:
+                self.interpreter_ref.error(
+                    ErrorType.SYNTAX_ERROR,
+                    f"{InterpreterBase.NEW_DEF} expects only 1 argument but {len(args)} were given",
+                    line_num_of_expr
+                )
+            return self.__execute_new_aux(args[0], line_num_of_expr)
+
+        if operator == InterpreterBase.CALL_DEF:
+            return self.__execute_call_aux(env, expr)
+    
+    def __execute_new_aux(self, class_name, line_num_of_new=None):
+        obj = self.interpreter_ref.instantiate_class(class_name, line_num_of_new)
+        # the type of this value is the class's name
+        return Value(class_name, obj)
+
+    def __execute_call_aux(self, env, expr, line_num_of_call=None):
+        # expr is (call obj method arg1 arg2 ...)
+        obj_name = expr[1]
+        if obj_name == InterpreterBase.ME_DEF:
+            obj = self
+        elif obj_name == InterpreterBase.SUPER_DEF:
+            if self.__super is None:
+                self.interpreter_ref.error(
+                    ErrorType.TYPE_ERROR,
+                    f"Invalid call to super from class {self.name}",
+                    line_num_of_call
+                )
+            obj = self.__super
+        else:
+            # evaluate_expression returns a Value object: this gets the actual value out of it
+            obj = self.__evaluate_expression(env, expr, line_num_of_call).value
+
+        if obj is None:
+            self.interpreter_ref.error(
+                ErrorType.FAULT_ERROR,
+                f"Null dereference",
+                line_num_of_call
+            )
+        
+        method_name, *args = expr[2:]
+        args_as_values = [self.__evaluate_expression(arg) for arg in args]
+
+        return obj.execute_method(method_name, args_as_values, line_num_of_call)
 
     def __instantiate_fields(self):
         for field_name, field_def in self.class_def.get_field_defs().items():

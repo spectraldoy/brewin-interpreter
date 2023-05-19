@@ -12,6 +12,24 @@ class Type(Enum):
     NOTHING = auto()
     CLASS = auto()
 
+    def __str__(self):
+        match self:
+            case Type.INT:
+                return InterpreterBase.INT_DEF
+            case Type.STRING:
+                return InterpreterBase.STRING_DEF
+            case Type.BOOL:
+                return InterpreterBase.BOOL_DEF
+            case Type.NOTHING:
+                return InterpreterBase.NOTHING_DEF
+            case Type.CLASS:
+                return InterpreterBase.CLASS_DEF
+            case _:
+                return "unknown"
+
+    def __repr__(self):
+        return str(self)
+
 
 class TypeRegistry:
     """
