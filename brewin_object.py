@@ -168,7 +168,13 @@ class Object:
         return Object.STATUS_PROCEED, self.__execute_call_aux(env, code, code[0].line_num)
 
     def __execute_return(self, env, code):
-        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+        if len(code) == 1:
+            # return with no expression
+            out = Value(Type.NOTHING)
+        else:
+            out = self.__evaluate_expression(env, code[1], code[0].line_num)
+
+        return Object.STATUS_RETURN, out
 
     def __execute_inputi(self, env, code):
         return Object.STATUS_PROCEED, Value(Type.NOTHING)
