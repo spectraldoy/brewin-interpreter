@@ -44,7 +44,7 @@ def create_value(val):
     elif isinstance(val, str) and val.lstrip("-").isnumeric():
         out = Value(Type.INT, int(val))
     elif val == InterpreterBase.NULL_DEF:
-        out = Value(Type.CLASS, None)
+        out = Value(Type.NULL, None)
     elif val == InterpreterBase.NOTHING_DEF:
         out = Value(Type.NOTHING)
     else:

@@ -237,7 +237,7 @@ class Object:
         # (let ( (t1 p1) (t2 p2) ... )
         #   (stmt1) (stmt2) ... )
         let_kw, local_var_defs, *statements = code
-        env = copy.copy(env)
+        env = env.copy()
 
         # initialize all the locals and put them in the new env
         for local_type, local_name, local_initial_value in local_var_defs:

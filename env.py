@@ -7,8 +7,8 @@ class LexicalEnvironment:
     objects, which hold their actual value and type
     """
 
-    def __init__(self):
-        self.__environment = {}
+    def __init__(self, env={}):
+        self.__environment = env
     
     def get(self, symbol):
         if symbol not in self.__environment:
@@ -18,6 +18,11 @@ class LexicalEnvironment:
     
     def set(self, symbol, field):
         self.__environment[symbol] = field
+    
+    def copy(self):
+        new_env = self.__environment.copy()
+        return LexicalEnvironment(new_env)
+
     
     def __contains__(self, symbol):
         return symbol in self.__environment

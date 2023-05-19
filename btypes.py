@@ -58,7 +58,7 @@ class TypeRegistry:
     @classmethod
     def get_all_supers(cls, class_name):
         if class_name == Type.NULL:
-            return cls.entries()
+            return Result.Ok(cls.entries())
 
         res = cls.get_super(class_name)
         if not res.ok:
