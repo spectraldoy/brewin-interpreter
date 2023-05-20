@@ -1,5 +1,3 @@
-from intbase import ErrorType
-
 class LexicalEnvironment:
     """
     Class to maintain the Lexical Environment for method calls in Brewin++

@@ -1,0 +1,7 @@
+(class main
+    (method void main ()
+        (let ((int x 0))
+            (print (== x null))
+        )
+    )
+)

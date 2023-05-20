@@ -87,6 +87,14 @@ class TypeRegistry:
     @classmethod
     def entries(cls):
         return set(cls.__register.keys())
+    
+    @classmethod
+    def clear(cls):
+        cls.__register = {
+            Type.CLASS: None
+        }
+        return Result.Ok()
+
 
 
 def str_to_type(string):

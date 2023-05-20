@@ -1,0 +1,42 @@
+(class person
+    (method string talk () (return "i'm a person"))
+    (method person get_me () (return me))
+    (method bool is_student () (return false))
+)
+
+(class student inherits person
+    (method string talk () (return "i'm a student"))
+    (method bool is_student () (return true))
+)
+
+(class main
+    (method person very_cursed ((int x))
+        (let ((person out null))
+            (while (!= (% x 17) 1)
+                (begin
+                    (set x (- x 1))
+                    (if (== 0 (% x 2))
+                        (set out (new person))
+                        (set out (new student))
+                    )
+                    (set out (call out get_me))
+                    (print x " " (call out talk))
+                    (if (== (% x 13) 0)
+                        (return out)
+                    )
+                )
+            )
+            (return null)
+        )
+    )
+
+    (method void main ()
+        (let ((int x 55) (person out null))
+            (set out (call me very_cursed x))
+            (if (== out null)
+                (print "aw shucks")
+                (print (call out talk))
+            )
+        )
+    )
+)

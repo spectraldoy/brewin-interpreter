@@ -6,7 +6,6 @@
     (field int student_stuff 10)
 )
 
-# TODO: the fact that this returns false is cursed
 (class main
     (method void main ()
         (let ((student y null))

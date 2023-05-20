@@ -2,7 +2,7 @@ from bparser import BParser
 from intbase import InterpreterBase, ErrorType
 from brewin_object import Object
 from classdef import ClassDef
-from btypes import Type
+from btypes import Type, TypeRegistry
 from value import Value
 
 class Interpreter(InterpreterBase):
@@ -58,6 +58,8 @@ class Interpreter(InterpreterBase):
         self.trace_output = trace_output
         self.main_object = None
         self.__class_definitions = {}
+
+        TypeRegistry.clear()
     
     def run(self, program):
         status, parsed_program = BParser.parse(program)

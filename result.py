@@ -1,4 +1,3 @@
-
 class Result:
     def __init__(self, value=None, error=None, message=None, line_num=None):
         self.value = value

@@ -284,10 +284,7 @@ class Object:
             if expr in self.__fields:
                 # get the Value object out of the field
                 return self.__fields[expr].value
-            
-            # if expr == InterpreterBase.ME_DEF:
-            #     return Value(self.name, self)
-            
+         
             if expr == InterpreterBase.SUPER_DEF:
                 if self.__super is not None:
                     return self.__super

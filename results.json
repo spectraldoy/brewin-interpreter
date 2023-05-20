@@ -1,6 +1,12 @@
 {
     "tests": [
         {
+            "name": "Correctness | test_while2",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
             "name": "Correctness | test_ll",
             "score": 1,
             "max_score": 1,
@@ -43,6 +49,12 @@
             "visibility": "visible"
         },
         {
+            "name": "Correctness | test_me_and_super",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
             "name": "Correctness | test_return_null",
             "score": 1,
             "max_score": 1,
@@ -50,6 +62,12 @@
         },
         {
             "name": "Correctness | test_overload",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Correctness | test_while3",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
@@ -110,6 +128,12 @@
         },
         {
             "name": "Incorrectness | test_bad_compare",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Incorrectness | test_compare_null",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"

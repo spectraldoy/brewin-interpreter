@@ -33,14 +33,18 @@ class ClassDef:
     The act of defining a class registers a new Type in the type registry
     """
     def __init__(self, class_def, interpreter_ref):
+        self.class_def = class_def
         self.name = class_def[1]
         
         if class_def[2] == InterpreterBase.INHERITS_DEF:
-            TypeRegistry.register(self.name, class_def[3])
+            res = TypeRegistry.register(self.name, class_def[3])
             body_starts_at = 4
         else:
-            TypeRegistry.register(self.name, Type.CLASS)
+            res = TypeRegistry.register(self.name, Type.CLASS)
             body_starts_at = 2
+        
+        if not res.ok:
+            interpreter_ref.error(*res[1:])
 
         self.interpreter_ref = interpreter_ref
         self.__field_defs = {}
