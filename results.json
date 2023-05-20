@@ -1,8 +1,20 @@
 {
     "tests": [
         {
+            "name": "Correctness | test_ll",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
             "name": "Correctness | test_inher1",
             "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Correctness | test_ll2",
+            "score": 0,
             "max_score": 1,
             "visibility": "visible"
         },
@@ -20,12 +32,6 @@
         },
         {
             "name": "Correctness | test_return_me",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Correctness | test_inher3",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"

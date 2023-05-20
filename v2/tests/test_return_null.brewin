@@ -1,0 +1,21 @@
+(class nuller
+    (field nuller f null)
+    (method nuller get_null () (return null))
+    (method nuller get_null2 ()
+        (let ((nuller bruh null))
+            (set bruh (new nuller))
+            (set bruh null)
+            (return bruh)
+        )
+    )
+)
+
+(class main
+    (method void main ()
+        (let ((nuller bruh null))
+            (set bruh (new nuller))
+            (print (call bruh get_null))
+            (print (call bruh get_null2))
+        )
+    )
+)
