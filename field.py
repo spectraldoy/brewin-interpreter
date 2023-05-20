@@ -4,12 +4,12 @@ from btypes import str_to_type, is_subclass_of, Type
 from intbase import ErrorType
 
 class Field:
-    def __init__(self, field_def):
+    def __init__(self, type, name, value):
         # indicates whether any error has occurred with this field
         self.status = Result.Ok()
-        self.name = field_def.name
-        # defines self.value and self.type
-        self.__set_to_field_def(field_def.type, field_def.value)
+        self.type = type
+        self.name = name
+        self.value = value
 
     def __set_to_field_def(self, field_type, field_value):
         if not self.status.ok:
@@ -65,5 +65,13 @@ class Field:
     def can_be_set_to(self, typ):
         # whether or not this field can be set to a Value of type typ
         return is_subclass_of(typ, self.type)
+    
+    @classmethod
+    def from_field_def(cls, field_def):
+        instance = cls(field_def.type, field_def.name, field_def.value)
+        instance.status = Result.Ok()
+        # defines self.value and self.type
+        instance.__set_to_field_def(field_def.type, field_def.value)
+        return instance
 
 

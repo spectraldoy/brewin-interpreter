@@ -52,7 +52,7 @@ class Method:
                 param_name,
                 get_default_value_as_brewin_literal(param_type)
             )
-            param_as_field = Field(param_as_field_def)
+            param_as_field = Field.from_field_def(param_as_field_def)
             if not param_as_field.status.ok:
                 self.status = param_as_field.status
                 return

@@ -73,6 +73,12 @@
             "visibility": "visible"
         },
         {
+            "name": "Correctness | test_most_derived",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
             "name": "Correctness | test_inher2",
             "score": 1,
             "max_score": 1,

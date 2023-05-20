@@ -57,15 +57,21 @@ class Object:
         # also returns the super object to call it from
         return self.__super.get_method(method_name, argument_types, line_num_of_call)
 
-    def execute_method(self, method_name, arguments=[], line_num_of_call=None):
-        # executor is the calling obj; self may be one of its supers
+    def execute_method(self, method_name, arguments=[], line_num_of_call=None, me_field=None):
         # assume arguments is a list of Value objects
         argument_types = [arg.type for arg in arguments]
-        obj, method = self.get_method(method_name, argument_types, line_num_of_call)
 
-        # create a new lexical environment for this method call
+        # create a new lexical environment for this method call,
         # when you call a method, it cannot see the variables outside its scope
         env = LexicalEnvironment()
+
+        # me should refer to the same object in derived classes
+        if me_field is None:
+            obj, method = self.get_method(method_name, argument_types, line_num_of_call)
+            env.set(InterpreterBase.ME_DEF, Field(self.name, InterpreterBase.ME_DEF, Value(self.name, self)))
+        else:
+            obj, method = me_field.value.value.get_method(method_name, argument_types, line_num_of_call)
+            env.set(InterpreterBase.ME_DEF, me_field)
 
         for formal_param, arg in zip(method.params_as_fields, arguments):
             formal_param_name = formal_param.name
@@ -251,7 +257,7 @@ class Object:
 
             # local variables must have an initial value specified
             # and in Barista, they cannot be initialized with values of class fields
-            local_field = Field(local_as_field_def)
+            local_field = Field.from_field_def(local_as_field_def)
             if not local_field.status.ok:
                 local_field.status.line_num = let_kw.line_num
                 self.interpreter_ref.error(*local_field.status[1:])
@@ -279,8 +285,8 @@ class Object:
                 # get the Value object out of the field
                 return self.__fields[expr].value
             
-            if expr == InterpreterBase.ME_DEF:
-                return Value(self.name, self)
+            # if expr == InterpreterBase.ME_DEF:
+            #     return Value(self.name, self)
             
             if expr == InterpreterBase.SUPER_DEF:
                 if self.__super is not None:
@@ -409,8 +415,10 @@ class Object:
     def __execute_call_aux(self, env, expr, line_num_of_call=None):
         # expr is (call obj method arg1 arg2 ...)
         obj_name = expr[1]
+
         if obj_name == InterpreterBase.ME_DEF:
             obj = self
+            me_field = env.get(InterpreterBase.ME_DEF)
         elif obj_name == InterpreterBase.SUPER_DEF:
             if self.__super is None:
                 self.interpreter_ref.error(
@@ -419,6 +427,7 @@ class Object:
                     line_num_of_call
                 )
             obj = self.__super
+            me_field = Field(obj.name, InterpreterBase.ME_DEF, Value(self.__super.name, obj))
         else:
             # evaluate_expression returns a Value object: this gets the actual value out of it
             obj = self.__evaluate_expression(env, obj_name, line_num_of_call)
@@ -429,15 +438,16 @@ class Object:
                     line_num_of_call
                 )
             obj = obj.value
+            me_field = None
             
         method_name, *args = expr[2:]
         args_as_values = [self.__evaluate_expression(env, arg, line_num_of_call) for arg in args]
 
-        return obj.execute_method(method_name, args_as_values, line_num_of_call)
+        return obj.execute_method(method_name, args_as_values, line_num_of_call, me_field)
 
     def __instantiate_fields(self):
         for field_name, field_def in self.class_def.get_field_defs().items():
-            self.__fields[field_name] = Field(field_def)
+            self.__fields[field_name] = Field.from_field_def(field_def)
         
     def __instantiate_methods(self):
         for method_name, method_def in self.class_def.get_method_defs().items():
