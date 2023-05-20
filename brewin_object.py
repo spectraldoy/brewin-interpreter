@@ -87,6 +87,7 @@ class Object:
                 # pass objects by reference, not by value
                 formal_param_field = formal_param
             else:
+                # pass everything else by value
                 formal_param_field = copy.deepcopy(formal_param)
             formal_param_field.set_to_value(arg)
             if not formal_param_field.status.ok:

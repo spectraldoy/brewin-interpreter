@@ -1,0 +1,7 @@
+(class main
+    (method void main ()
+        (let ((main x null))
+            (print (== x breww))
+        )
+    )
+)

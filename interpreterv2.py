@@ -59,6 +59,7 @@ class Interpreter(InterpreterBase):
         self.main_object = None
         self.__class_definitions = {}
 
+        # reinitialize the TypeRegistry
         TypeRegistry.clear()
     
     def run(self, program):

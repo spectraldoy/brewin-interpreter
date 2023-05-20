@@ -127,6 +127,12 @@
             "visibility": "visible"
         },
         {
+            "name": "Incorrectness | test_bad_value",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
             "name": "Incorrectness | test_bad_compare",
             "score": 1,
             "max_score": 1,
