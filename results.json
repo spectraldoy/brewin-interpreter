@@ -43,6 +43,12 @@
             "visibility": "visible"
         },
         {
+            "name": "Correctness | test_empty_let",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
             "name": "Correctness | test_inher3",
             "score": 1,
             "max_score": 1,
@@ -158,6 +164,18 @@
         },
         {
             "name": "Incorrectness | test_return",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Incorrectness | test_invalid_set_param",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Incorrectness | test_bad_param",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"

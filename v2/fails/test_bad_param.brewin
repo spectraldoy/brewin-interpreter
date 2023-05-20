@@ -1,0 +1,6 @@
+(class main
+    (method void bruh ((int x)) (return x))
+    (method void main ()
+        (call me bruh "hi")
+    )
+)
