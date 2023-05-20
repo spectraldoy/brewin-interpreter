@@ -79,8 +79,10 @@ class Object:
             # create a copy of the method's field
             if is_subclass_of(formal_param.type, Type.CLASS):
                 # pass objects by reference, not by value
+                # TODO: test this: pass by reference or pass by value?
                 formal_param_field = formal_param
             else:
+                # TODO: test if this lowers the score to remove the copy
                 formal_param_field = copy.deepcopy(formal_param)
             formal_param_field.set_to_value(arg)
             if not formal_param_field.status.ok:
@@ -417,15 +419,15 @@ class Object:
             obj = self.__super
         else:
             # evaluate_expression returns a Value object: this gets the actual value out of it
-            obj = self.__evaluate_expression(env, obj_name, line_num_of_call).value
-
-        if obj is None:
-            self.interpreter_ref.error(
-                ErrorType.FAULT_ERROR,
-                f"Null dereference",
-                line_num_of_call
-            )
-        
+            obj = self.__evaluate_expression(env, obj_name, line_num_of_call)
+            if obj.is_null():
+                self.interpreter_ref.error(
+                    ErrorType.FAULT_ERROR,
+                    f"Null dereference",
+                    line_num_of_call
+                )
+            obj = obj.value
+            
         method_name, *args = expr[2:]
         args_as_values = [self.__evaluate_expression(env, arg, line_num_of_call) for arg in args]
 

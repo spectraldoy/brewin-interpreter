@@ -14,7 +14,7 @@
         },
         {
             "name": "Correctness | test_ll2",
-            "score": 0,
+            "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
@@ -37,6 +37,12 @@
             "visibility": "visible"
         },
         {
+            "name": "Correctness | test_return_null",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
             "name": "Correctness | test_overload",
             "score": 1,
             "max_score": 1,
@@ -50,6 +56,12 @@
         },
         {
             "name": "Correctness | test_compat_compare",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Correctness | test_ll3",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"

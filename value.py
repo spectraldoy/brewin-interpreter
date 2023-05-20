@@ -31,7 +31,7 @@ class Value:
         self.__value = new_value.value
     
     def is_null(self):
-        return self.type == Type.CLASS and self.value is None
+        return self.type == Type.NULL
 
 
 def create_value(val):
