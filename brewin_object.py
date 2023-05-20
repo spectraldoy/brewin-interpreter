@@ -11,7 +11,6 @@ from classdef import FieldDef
 class Object:
     STATUS_PROCEED = 0
     STATUS_RETURN = 1
-    STATUS_ERR = 2
 
     def __init__(self, interpreter_ref, class_def):
         self.interpreter_ref = interpreter_ref
@@ -51,7 +50,7 @@ class Object:
         if self.__super is None:
             self.interpreter_ref.error(
                 ErrorType.NAME_ERROR,
-                f"Unknown method {method_name}",
+                f"No method {method_name} matches the calling signature",
                 line_num_of_call
             )
         
@@ -59,6 +58,7 @@ class Object:
         return self.__super.get_method(method_name, argument_types, line_num_of_call)
 
     def execute_method(self, method_name, arguments=[], line_num_of_call=None):
+        # executor is the calling obj; self may be one of its supers
         # assume arguments is a list of Value objects
         argument_types = [arg.type for arg in arguments]
         obj, method = self.get_method(method_name, argument_types, line_num_of_call)
@@ -79,10 +79,8 @@ class Object:
             # create a copy of the method's field
             if is_subclass_of(formal_param.type, Type.CLASS):
                 # pass objects by reference, not by value
-                # TODO: test this: pass by reference or pass by value?
                 formal_param_field = formal_param
             else:
-                # TODO: test if this lowers the score to remove the copy
                 formal_param_field = copy.deepcopy(formal_param)
             formal_param_field.set_to_value(arg)
             if not formal_param_field.status.ok:
@@ -373,7 +371,11 @@ class Object:
         if operator == InterpreterBase.CALL_DEF:
             return self.__execute_call_aux(env, expr)
 
-        self.interpreter_ref.error(ErrorType.SYNTAX_ERROR, "blah", line_num_of_expr)
+        self.interpreter_ref.error(
+            ErrorType.SYNTAX_ERROR,
+            "Something went wrong: probably a statement was used where there should have been an expression",
+            line_num_of_expr
+        )
     
     def __execute_set_aux(self, env, var_name, val, line_num):
         if val.type == Type.NOTHING:
@@ -391,7 +393,7 @@ class Object:
         else:
             self.interpreter_ref.error(
                 ErrorType.NAME_ERROR,
-                f"Attempt to set unknown field / parameter {var_name}",
+                f"Attempt to set unknown field {var_name}",
                 line_num
             )
         

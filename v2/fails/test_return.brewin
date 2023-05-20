@@ -1,0 +1,8 @@
+(class main
+    (method int square ((int x))
+        (return (* x x))
+    )
+    (method int main ()
+        (return "hi")
+    )
+)

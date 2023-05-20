@@ -1,0 +1,27 @@
+(class thing
+    (method void virtual ()
+        (print "I'm a thing")
+    )
+    (method void call_virtual ()
+        (call me virtual)
+    )
+)
+
+(class subthing inherits thing
+    (method void virtual ()
+        (print "I'm a subthing!")
+    )
+    (method void super_virt ()
+        (call super virtual)
+    )
+)
+
+(class main
+    (method void main ()
+        (let ((thing t null))
+            (set t (new subthing))
+            (call t call_virtual)
+            (call t super_virt)
+        )
+    )
+)
