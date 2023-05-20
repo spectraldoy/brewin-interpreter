@@ -79,7 +79,7 @@ class Interpreter(InterpreterBase):
     def get_class_def(self, class_name):
         if class_name not in self.__class_definitions:
             super().error(
-                ErrorType.NAME_ERROR,
+                ErrorType.TYPE_ERROR,
                 f"No class named {class_name} found"
             )
         

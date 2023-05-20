@@ -7,8 +7,8 @@ class LexicalEnvironment:
     objects, which hold their actual value and type
     """
 
-    def __init__(self, env={}):
-        self.__environment = env
+    def __init__(self, env=None):
+        self.__environment = env if env is not None else {}
     
     def get(self, symbol):
         if symbol not in self.__environment:

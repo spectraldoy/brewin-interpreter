@@ -47,15 +47,16 @@ class Object:
             method = self.__methods[method_name]
             if method.matches_signature(argument_types):
                 return self, method
-        elif self.__super is None:
+        
+        if self.__super is None:
             self.interpreter_ref.error(
                 ErrorType.NAME_ERROR,
                 f"Unknown method {method_name}",
                 line_num_of_call
             )
-        else:
-            # have to return the super object to call it from
-            return self.__super.get_method(method_name, argument_types, line_num_of_call)
+        
+        # also returns the super object to call it from
+        return self.__super.get_method(method_name, argument_types, line_num_of_call)
 
     def execute_method(self, method_name, arguments=[], line_num_of_call=None):
         # assume arguments is a list of Value objects
@@ -278,6 +279,19 @@ class Object:
                 # get the Value object out of the field
                 return self.__fields[expr].value
             
+            if expr == InterpreterBase.ME_DEF:
+                return Value(self.name, self)
+            
+            if expr == InterpreterBase.SUPER_DEF:
+                if self.__super is not None:
+                    return self.__super
+                
+                self.interpreter_ref.error(
+                    ErrorType.TYPE_ERROR,
+                    f"Invalid call to {InterpreterBase.SUPER_DEF} object",
+                    line_num_of_expr
+                )
+            
             val_res = create_value(expr)
             if not val_res.ok:
                 val_res.line_num = line_num_of_expr
@@ -380,6 +394,8 @@ class Object:
             )
         
         field.set_to_value(val)
+        if not field.status.ok:
+            self.interpreter_ref.error(*field.status[1:])
 
     def __execute_new_aux(self, class_name, line_num_of_new=None):
         obj = self.interpreter_ref.instantiate_class(class_name, line_num_of_new)

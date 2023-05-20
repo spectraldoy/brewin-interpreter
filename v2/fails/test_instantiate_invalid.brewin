@@ -1,0 +1,10 @@
+(class student
+    (field string name "bruh")
+)
+
+(class main
+    (field main x null)
+    (method void main () 
+        (set x (new blarch))
+    )
+)

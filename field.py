@@ -64,6 +64,6 @@ class Field:
     
     def can_be_set_to(self, typ):
         # whether or not this field can be set to a Value of type typ
-        return is_subclass_of(typ, self.value.type)
+        return is_subclass_of(typ, self.type)
 
 

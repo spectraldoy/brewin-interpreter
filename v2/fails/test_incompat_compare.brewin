@@ -1,0 +1,25 @@
+(class A
+    (method string foo ()
+        (return "A")
+    )
+)
+
+(class B inherits A
+    (method string foo () (return "B"))
+)
+
+(class C inherits A
+    (method string foo () (return "C"))
+)
+
+(class main
+    (method void main ()
+        (let ((A a null) (B b null) (C c null))
+            (set a (new A))
+            (set b (new B))
+            (set c (new C))
+            (print (!= a b) " " (== a c))
+            (print (!= b c))
+        )
+    )
+)
