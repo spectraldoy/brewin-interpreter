@@ -1,6 +1,12 @@
 {
     "tests": [
         {
+            "name": "Correctness | test_ll4",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
             "name": "Correctness | test_while2",
             "score": 1,
             "max_score": 1,
@@ -19,6 +25,12 @@
             "visibility": "visible"
         },
         {
+            "name": "Correctness | test_while4",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
             "name": "Correctness | test_ll2",
             "score": 1,
             "max_score": 1,
@@ -32,6 +44,12 @@
         },
         {
             "name": "Correctness | test_let",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Correctness | test_return_assign_type",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
@@ -109,6 +127,12 @@
             "visibility": "visible"
         },
         {
+            "name": "Correctness | test_return_assign_type2",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
             "name": "Correctness | test_while",
             "score": 1,
             "max_score": 1,
@@ -127,6 +151,12 @@
             "visibility": "visible"
         },
         {
+            "name": "Incorrectness | test_incompat_compare3",
+            "score": 0,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
             "name": "Incorrectness | test_call_badargs",
             "score": 1,
             "max_score": 1,
@@ -135,6 +165,18 @@
         {
             "name": "Incorrectness | test_bad_value",
             "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Incorrectness | test_let",
+            "score": 0,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Incorrectness | test_return_assign_type",
+            "score": 0,
             "max_score": 1,
             "visibility": "visible"
         },

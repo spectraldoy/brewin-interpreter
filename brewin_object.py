@@ -58,13 +58,12 @@ class Object:
         return self.__super.get_method(method_name, argument_types, line_num_of_call)
 
     def execute_method(self, method_name, arguments=[], line_num_of_call=None, me_field=None):
-        # assume arguments is a list of Value objects
-        argument_types = [arg.type for arg in arguments]
-
         # create a new lexical environment for this method call,
         # when you call a method, it cannot see the variables outside its scope
         env = LexicalEnvironment()
 
+        # assume arguments is a list of Value objects
+        argument_types = [arg.type for arg in arguments]
         # me should refer to the same object in derived classes
         if me_field is None:
             obj, method = self.get_method(method_name, argument_types, line_num_of_call)
@@ -152,7 +151,7 @@ class Object:
         return Object.STATUS_PROCEED, Value(Type.NOTHING)
 
     def __execute_set(self, env, code):
-        # (set var (expr))
+        # (set var expr)
         val = self.__evaluate_expression(env, code[2], code[0].line_num)
         self.__execute_set_aux(env, code[1], val, code[0].line_num)
         return Object.STATUS_PROCEED, Value(Type.NOTHING)
@@ -249,6 +248,8 @@ class Object:
 
         # initialize all the locals and put them in the new env
         for local_type, local_name, local_initial_value in local_var_defs:
+            # BUG: doesn't check for duplicate definition of locals in the env
+
             # locals shadow over env and self.fields
             local_as_field_def = FieldDef(
                 local_type,
@@ -280,6 +281,9 @@ class Object:
             env_res = env.get(expr)
             if env_res is not None:
                 # the env stores field: get the Value out
+                # BUG: UNINTENDED BEHAVIOR WITH FIELDS: WE LOSE TYPE INFO
+                # BUG: EVALUATE_EXPRESSION SHOULD BE RETURNING FIELDS
+                # BUG: THIS CAUSES TYPE CHECKING WHEN COMPARING CLASSES TO FAIL
                 return env_res.value
             
             if expr in self.__fields:
@@ -336,7 +340,8 @@ class Object:
                 )
 
             # by this point, operand1.type == operand2.type
-            if operand1.type not in self.interpreter_ref.binary_ops:
+            if operand1.type not in self.interpreter_ref.binary_ops or \
+                operator not in self.interpreter_ref.binary_ops[operand1.type]:
                 self.interpreter_ref.error(
                     ErrorType.TYPE_ERROR,
                     f"binary operator {operator} not defined for type {operand1.type}",
@@ -354,7 +359,8 @@ class Object:
                 )
 
             operand = self.__evaluate_expression(env, args[0], line_num_of_expr)
-            if operand.type not in self.interpreter_ref.unary_ops:
+            if operand.type not in self.interpreter_ref.unary_ops or \
+                operator not in self.interpreter_ref.unary_ops[operand.type]:
                 self.interpreter_ref.error(
                     ErrorType.TYPE_ERROR,
                     f"unary operator {operator} not defined for type {operand.type}",

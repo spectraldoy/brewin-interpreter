@@ -1,0 +1,23 @@
+(class person
+  (field person bruh null)
+  (method void set_bruh ((person x)) (set bruh x))
+  (method person get_bruh () (return bruh))
+  (method bool is_student () (return false))
+)
+
+(class student inherits person
+  (method bool is_student () (return true))
+)
+
+(class main
+  (method void main ()
+    (let ((student x null))
+      (set x (new student))
+      (call x set_bruh (new person))
+      (print (call x is_student))
+      (print (call (call x get_bruh) is_student))
+      (call x set_bruh (new student))
+      (print (call (call x get_bruh) is_student))
+    )
+  )
+)
