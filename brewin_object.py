@@ -62,18 +62,18 @@ class Object:
         # when you call a method, it cannot see the variables outside its scope
         env = LexicalEnvironment()
 
-        # assume arguments is a list of Value objects
-        argument_types = [typ for typ, _ in arguments]
-        argument_vals = [val for _, val in arguments]
+        # assume arguments is a list of Field objects
+        argument_types = [arg.type for arg in arguments]
+
         # me should refer to the same object in derived classes
         if me_field is None:
             obj, method = self.get_method(method_name, argument_types, line_num_of_call)
-            env.set(InterpreterBase.ME_DEF, Field(self.name, InterpreterBase.ME_DEF, Value(self.name, self)))
+            env.set(InterpreterBase.ME_DEF, Field.from_value(Value(self.name, self)))
         else:
             obj, method = me_field.value.value.get_method(method_name, argument_types, line_num_of_call)
             env.set(InterpreterBase.ME_DEF, me_field)
 
-        for formal_param, typ, arg in zip(method.params_as_fields, argument_types, argument_vals):
+        for formal_param, arg in zip(method.params_as_fields, arguments):
             formal_param_name = formal_param.name
             if formal_param_name in env:
                 self.interpreter_ref.error(
@@ -90,30 +90,35 @@ class Object:
                 # pass everything else by value
                 formal_param_field = copy.deepcopy(formal_param)
             
-            # TODO: typing stuff isn't failing here
-            formal_param_field.set_to_field(Field(typ, f"_arg__{formal_param_name}", arg))
+            formal_param_field.set_to_field(arg)
             if not formal_param_field.status.ok:
                 self.interpreter_ref.error(
                     *formal_param_field.status[1:]
                 )
             env.set(formal_param_name, formal_param_field)
         
-        status, return_value = obj.__execute_statement(env, method.statement)
+        status, return_field = obj.__execute_statement(env, method.statement)
+        ret = Field(method.return_type)
+
+        if return_field.type == Type.NOTHING:
+            return ret
+
         if status == Object.STATUS_RETURN:
+            ret.set_to_field(return_field)
             # type check the return values
-            if is_subclass_of(return_value.type, method.return_type):
-                return return_value
-            
-            if return_value.type != Type.NOTHING:
+            if not is_subclass_of(return_field.type, method.return_type):
                 self.interpreter_ref.error(
                     ErrorType.TYPE_ERROR,
-                    f"Mismatched types: expected {method.return_type} but got {return_value.type}",
+                    f"Mismatched types: expected {method.return_type} but got {return_field.type}",
                     line_num_of_call
                 )
+            
+            if not ret.status.ok:
+                self.interpreter_ref.error(*ret.status[1:])
         
         # return the default value for the return type
-        return get_default_value(method.return_type)
-
+        return ret
+    
     def __execute_statement(self, env, statement):
         name = statement[0]
 
@@ -147,39 +152,38 @@ class Object:
 
     def __execute_begin(self, env, code):
         for statement in code[1:]:
-            status, return_value = self.__execute_statement(env, statement)
+            status, return_field = self.__execute_statement(env, statement)
             if status == Object.STATUS_RETURN:
-                return status, return_value
+                return status, return_field
         
-        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+        return Object.STATUS_PROCEED, Field(Type.NOTHING)
 
     def __execute_set(self, env, code):
         # (set var expr)
-        typ, val = self.__evaluate_expression(env, code[2], code[0].line_num)
-        self.__execute_set_aux(
-            env, code[1], Field(typ, f"__set_{code[0].line_num}", val), code[0].line_num)
-        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+        field = self.__evaluate_expression(env, code[2], code[0].line_num)
+        self.__execute_set_aux(env, code[1], field, code[0].line_num)
+        return Object.STATUS_PROCEED, Field(Type.NOTHING)
 
     def __execute_if(self, env, code):
         condition = code[1]
         if_block = code[2]
         else_block = None if len(code) != 4 else code[3]
 
-        _, evaluated_condition = self.__evaluate_expression(env, condition, code[0].line_num)
-        if evaluated_condition.type != Type.BOOL:
+        evaluated_condition = self.__evaluate_expression(env, condition, code[0].line_num)
+        if evaluated_condition.value.type != Type.BOOL:
             self.interpreter_ref.error(
                 ErrorType.TYPE_ERROR,
                 f"Condition of {InterpreterBase.IF_DEF} did not evaluate to a {InterpreterBase.BOOL_DEF}",
                 code[0].line_num
             )
         
-        evaluated_condition = evaluated_condition.value
+        evaluated_condition = evaluated_condition.value.value
         if evaluated_condition:
             return self.__execute_statement(env, if_block)
         elif else_block is not None:
             return self.__execute_statement(env, else_block)
         
-        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+        return Object.STATUS_PROCEED, Field(Type.NOTHING)
     
     def __execute_while(self, env, code):
         # (while (cond) (statement))
@@ -187,23 +191,24 @@ class Object:
         statement = code[2]
 
         while True:
-            _, evaluated_condition = self.__evaluate_expression(env, cond, code[0].line_num)
-            if evaluated_condition.type != Type.BOOL:
+            evaluated_condition = self.__evaluate_expression(env, cond, code[0].line_num)
+            if evaluated_condition.value.type != Type.BOOL:
                 self.interpreter_ref.error(
                     ErrorType.TYPE_ERROR,
                     f"Condition of {InterpreterBase.WHILE_DEF} did not evaluate to a {InterpreterBase.BOOL_DEF}",
                     code[0].line_num
                 )
             
-            proceed = evaluated_condition.value
+            # extract Value from Field, and value from Value
+            proceed = evaluated_condition.value.value
             if not proceed:
                 break
 
-            status, return_value = self.__execute_statement(env, statement)
+            status, return_field = self.__execute_statement(env, statement)
             if status == Object.STATUS_RETURN:
-                return status, return_value
+                return status, return_field
 
-        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+        return Object.STATUS_PROCEED, Field(Type.NOTHING)
 
     def __execute_call(self, env, code):
         return Object.STATUS_PROCEED, self.__execute_call_aux(env, code, code[0].line_num)
@@ -211,40 +216,38 @@ class Object:
     def __execute_return(self, env, code):
         if len(code) == 1:
             # return with no expression
-            out = Value(Type.NOTHING)
+            out = Field(Type.NOTHING)
         else:
-            _, out = self.__evaluate_expression(env, code[1], code[0].line_num)
+            out = self.__evaluate_expression(env, code[1], code[0].line_num)
 
         return Object.STATUS_RETURN, out
 
     def __execute_inputi(self, env, code):
         var_name = code[1]
         inp = int(self.interpreter_ref.get_input())
-        field = Field(Type.INT, f"__inputi_{code[0].line_num}", Value(Type.INT, inp))
-        self.__execute_set_aux(
-            env, var_name, field, code[0].line_num)
-        return Object.STATUS_PROCEED, Value(Type.NOTHING)
-
+        field = Field.from_value(Value(Type.INT, inp))
+        self.__execute_set_aux(env, var_name, field, code[0].line_num)
+        return Object.STATUS_PROCEED, Field(Type.NOTHING)
+    
     def __execute_inputs(self, env, code):
         var_name = code[1]
         inp = self.interpreter_ref.get_input()
-        field = Field(Type.STRING, f"__inputs_{code[0].line_num}", Value(Type.STRING, inp))
-        self.__execute_set_aux(
-            env, var_name, field, code[0].line_num)
-        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+        field = Field.from_value(Value(Type.STRING, inp))
+        self.__execute_set_aux(env, var_name, field, code[0].line_num)
+        return Object.STATUS_PROCEED, Field(Type.NOTHING)
 
     def __execute_print(self, env, code):
         def convert_to_brewin_literal(val):
             if val.type == Type.BOOL:
-                return InterpreterBase.TRUE_DEF if val.value else InterpreterBase.FALSE_DEF
-            return str(val.value)
+                return InterpreterBase.TRUE_DEF if val.value.value else InterpreterBase.FALSE_DEF
+            return str(val.value.value)
 
-        evald_exprs = [self.__evaluate_expression(env, expr, code[0].line_num)[1] for expr in code[1:]]
+        evald_exprs = [self.__evaluate_expression(env, expr, code[0].line_num) for expr in code[1:]]
         output = "".join(map(convert_to_brewin_literal, evald_exprs))
 
         self.interpreter_ref.output(output)
 
-        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+        return Object.STATUS_PROCEED, Field(Type.NOTHING)
 
     def __execute_let(self, env, code):
         # (let ( (t1 p1) (t2 p2) ... )
@@ -280,11 +283,11 @@ class Object:
         
         # execute the statements
         for statement in statements:
-            status, return_value = self.__execute_statement(env, statement)
+            status, return_field = self.__execute_statement(env, statement)
             if status == Object.STATUS_RETURN:
-                return status, return_value
+                return status, return_field
         
-        return Object.STATUS_PROCEED, Value(Type.NOTHING)
+        return Object.STATUS_PROCEED, Field(Type.NOTHING)
 
     def __evaluate_expression(self, env, expr, line_num_of_expr):
         # returns (type, Value)
@@ -294,15 +297,15 @@ class Object:
             env_res = env.get(expr)
             if env_res is not None:
                 # the env stores field: get the Value out and Field type
-                return env_res.type, env_res.value
+                return env_res
             
             if expr in self.__fields:
                 # get the Value object out of the field
-                return self.__fields[expr].type, self.__fields[expr].value
+                return self.__fields[expr]
          
             if expr == InterpreterBase.SUPER_DEF:
                 if self.__super is not None:
-                    return InterpreterBase.SUPER_DEF, self.__super
+                    return Field.from_value(Value(self.__super.name, self.__super), InterpreterBase.SUPER_DEF)
                 
                 self.interpreter_ref.error(
                     ErrorType.TYPE_ERROR,
@@ -316,7 +319,7 @@ class Object:
                 self.interpreter_ref.error(*val_res[1:])
             
             val = val_res.unwrap()
-            return val.type, val
+            return Field.from_value(val)
         
         # otherwise an expression is an operator with arguments
         operator, *args = expr
@@ -330,40 +333,39 @@ class Object:
                     line_num_of_expr
                 )
             
-            (op1type, op1val), (op2type, op2val) = [self.__evaluate_expression(env, arg, line_num_of_expr) for arg in args]
+            operand1, operand2 = [self.__evaluate_expression(env, arg, line_num_of_expr) for arg in args]
 
             # Object types can only be operated on if they are sub / super classes of each other
-            if is_subclass_of(op1type, Type.CLASS) and is_subclass_of(op2type, Type.CLASS):
-                if is_subclass_of(op1type, op2type) or is_subclass_of(op2type, op1type):
-                    # TODO: get the field's type here to compare, not the values
-                    ret = self.interpreter_ref.binary_ops[Type.CLASS][operator](op1val, op2val)
-                    # TODO: redundant
-                    return ret.type, ret
+            if is_subclass_of(operand1.type, Type.CLASS) and is_subclass_of(operand2.type, Type.CLASS):
+                if (is_subclass_of(operand1.value.type, operand2.value.type) or is_subclass_of(operand2.value.type, operand1.value.type)) and \
+                    (is_subclass_of(operand1.type, operand2.type) or is_subclass_of(operand2.type, operand1.type)):
+                    ret = self.interpreter_ref.binary_ops[Type.CLASS][operator](operand1.value, operand2.value)
+                    return Field.from_value(ret)
                 else:
                     self.interpreter_ref.error(
                         ErrorType.TYPE_ERROR,
-                        f"Cannot perform {operator} on unrelated object types {op1type} and {op2type}",
+                        f"Cannot perform {operator} on unrelated object types {operand1.type} and {operand2.type}",
                         line_num_of_expr
                     )
 
-            if op1type != op2type:
+            if operand1.type != operand2.type:
                 self.interpreter_ref.error(
                     ErrorType.TYPE_ERROR,
-                    f"{operator} attempted on incompatible types {op1type} and {op2type}",
+                    f"{operator} attempted on incompatible types {operand1.type} and {operand2.type}",
                     line_num_of_expr
                 )
 
             # by this point, operand1.type == operand2.type
-            if op1type not in self.interpreter_ref.binary_ops or \
-                operator not in self.interpreter_ref.binary_ops[op1type]:
+            if operand1.type not in self.interpreter_ref.binary_ops or \
+                operator not in self.interpreter_ref.binary_ops[operand1.type]:
                 self.interpreter_ref.error(
                     ErrorType.TYPE_ERROR,
-                    f"binary operator {operator} not defined for type {op1type}",
+                    f"binary operator {operator} not defined for type {operand1.type}",
                     line_num_of_expr
                 )
             
-            ret = self.interpreter_ref.binary_ops[op1type][operator](op1val, op2val)
-            return ret.type, ret
+            ret = self.interpreter_ref.binary_ops[operand1.type][operator](operand1.value, operand2.value)
+            return Field.from_value(ret)
         
         if operator in self.interpreter_ref.unary_op_set:
             if len(args) != 1:
@@ -373,17 +375,17 @@ class Object:
                     line_num_of_expr
                 )
 
-            optype, operand = self.__evaluate_expression(env, args[0], line_num_of_expr)
-            if optype not in self.interpreter_ref.unary_ops or \
-                operator not in self.interpreter_ref.unary_ops[optype]:
+            operand = self.__evaluate_expression(env, args[0], line_num_of_expr)
+            if operand.type not in self.interpreter_ref.unary_ops or \
+                operator not in self.interpreter_ref.unary_ops[operand.type]:
                 self.interpreter_ref.error(
                     ErrorType.TYPE_ERROR,
-                    f"unary operator {operator} not defined for type {optype}",
+                    f"unary operator {operator} not defined for type {operand.type}",
                     line_num_of_expr
                 )
             
-            ret = self.interpreter_ref.unary_ops[optype][operator](operand)
-            return ret.type, ret
+            ret = self.interpreter_ref.unary_ops[operand.type][operator](operand.value)
+            return Field.from_value(ret)
 
         if operator == InterpreterBase.NEW_DEF:
             if len(args) != 1:
@@ -392,12 +394,10 @@ class Object:
                     f"{InterpreterBase.NEW_DEF} expects only 1 argument but {len(args)} were given",
                     line_num_of_expr
                 )
-            ret = self.__execute_new_aux(args[0], line_num_of_expr)
-            return ret.type, ret
+            return self.__execute_new_aux(args[0], line_num_of_expr)
 
         if operator == InterpreterBase.CALL_DEF:
-            ret = self.__execute_call_aux(env, expr)
-            return ret.type, ret
+            return self.__execute_call_aux(env, expr)
 
         self.interpreter_ref.error(
             ErrorType.SYNTAX_ERROR,
@@ -432,7 +432,7 @@ class Object:
     def __execute_new_aux(self, class_name, line_num_of_new=None):
         obj = self.interpreter_ref.instantiate_class(class_name, line_num_of_new)
         # the type of this value is the class's name
-        return Value(class_name, obj)
+        return Field.from_value(Value(class_name, obj))
 
     def __execute_call_aux(self, env, expr, line_num_of_call=None):
         # expr is (call obj method arg1 arg2 ...)
@@ -449,23 +449,23 @@ class Object:
                     line_num_of_call
                 )
             obj = self.__super
-            me_field = Field(obj.name, InterpreterBase.ME_DEF, Value(self.__super.name, obj))
+            me_field = Field.from_value(Value(obj.name, obj))
         else:
             # evaluate_expression returns a Value object: this gets the actual value out of it
-            _, obj = self.__evaluate_expression(env, obj_name, line_num_of_call)
-            if obj.is_null():
+            obj_field = self.__evaluate_expression(env, obj_name, line_num_of_call)
+            if obj_field.value.is_null():
                 self.interpreter_ref.error(
                     ErrorType.FAULT_ERROR,
                     f"Null dereference",
                     line_num_of_call
                 )
-            obj = obj.value
+            obj = obj_field.value.value
             me_field = None
             
         method_name, *args = expr[2:]
-        args_as_values = [self.__evaluate_expression(env, arg, line_num_of_call) for arg in args]
+        args_as_fields = [self.__evaluate_expression(env, arg, line_num_of_call) for arg in args]
 
-        return obj.execute_method(method_name, args_as_values, line_num_of_call, me_field)
+        return obj.execute_method(method_name, args_as_fields, line_num_of_call, me_field)
 
     def __instantiate_fields(self):
         for field_name, field_def in self.class_def.get_field_defs().items():
@@ -476,7 +476,7 @@ class Object:
             self.__methods[method_name] = Method(method_def)
     
     def __possibly_instantiate_super(self):
-        # assume existence checking has already been done
+        # assume existence checking has already been done in ClassDef
         superclass = TypeRegistry.get_super(self.name).unwrap()
 
         # if this class does in fact inherit from something

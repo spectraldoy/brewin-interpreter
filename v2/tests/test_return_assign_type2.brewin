@@ -1,7 +1,7 @@
 (class person
   (field person bruh null)
   (method void set_bruh ((person x)) (set bruh x))
-  (method student get_bruh () (return bruh))
+  (method person get_bruh () (return bruh))
   (method bool is_student () (return false))
 )
 

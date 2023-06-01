@@ -176,13 +176,13 @@
         },
         {
             "name": "Incorrectness | test_return_assign_type",
-            "score": 0,
+            "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
             "name": "Incorrectness | test_bad_compare",
-            "score": 0,
+            "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },

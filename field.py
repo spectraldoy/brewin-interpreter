@@ -1,15 +1,18 @@
-from value import create_value
+from value import create_value, get_default_value
 from result import Result
 from btypes import str_to_type, is_subclass_of, Type
 from intbase import ErrorType
 
 class Field:
-    def __init__(self, type, name, value):
+    def __init__(self, typ, name="field", value=None):
         # indicates whether any error has occurred with this field
         self.status = Result.Ok()
-        self.type = type
+        self.type = typ
         self.name = name
         self.value = value
+
+        if value is None:
+            self.value = get_default_value(self.type)
 
     def __set_to_field_def(self, field_type, field_value):
         if not self.status.ok:
@@ -52,7 +55,7 @@ class Field:
         if not is_subclass_of(other.type, self.type):
             self.status = Result.Err(
                 ErrorType.TYPE_ERROR,
-                f"Type mismatch while setting {self.name}: {self.value} is not of type {other.type}"
+                f"Type mismatch while setting {self.name}: {other.type} is not of type {self.type}"
             )
             return
         
@@ -66,7 +69,7 @@ class Field:
         if not is_subclass_of(value.type, self.type):
             self.status = Result.Err(
                 ErrorType.TYPE_ERROR,
-                f"Type mismatch while setting {self.name}: {self.value} is not of type {value.type}"
+                f"Type mismatch while setting {self.name}: {value} is not of type {self.type}"
             )
             return
         
@@ -84,5 +87,11 @@ class Field:
         # defines self.value and self.type
         instance.__set_to_field_def(field_def.type, field_def.value)
         return instance
+    
+    @classmethod
+    def from_value(cls, value, name="field"):
+        typ = value.type
+        return cls(typ, name, value)
+
 
 
