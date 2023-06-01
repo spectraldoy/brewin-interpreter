@@ -63,6 +63,8 @@ class Object:
         env = LexicalEnvironment()
 
         # assume arguments is a list of Field objects
+        # also, when working with function params, need to perform type checking with the Values
+        # the arguments hold, rather than the actual fields
         argument_types = [arg.value.type for arg in arguments]
 
         # me should refer to the same object in derived classes
@@ -90,7 +92,9 @@ class Object:
                 # pass everything else by value
                 formal_param_field = copy.deepcopy(formal_param)
             
-            formal_param_field.set_to_field(arg)
+            # when working with function params, need to perform type checking with the Values
+            # the arguments hold, rather than the actual fields
+            formal_param_field.set_to_value(arg.value)
             if not formal_param_field.status.ok:
                 self.interpreter_ref.error(
                     *formal_param_field.status[1:]
@@ -98,6 +102,8 @@ class Object:
             env.set(formal_param_name, formal_param_field)
         
         status, return_field = obj.__execute_statement(env, method.statement)
+
+        # by default, return the default value for the return type
         ret = Field(method.return_type)
 
         if return_field.type == Type.NOTHING:
@@ -116,7 +122,6 @@ class Object:
             if not ret.status.ok:
                 self.interpreter_ref.error(*ret.status[1:])
         
-        # return the default value for the return type
         return ret
     
     def __execute_statement(self, env, statement):
