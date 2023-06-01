@@ -152,7 +152,7 @@
         },
         {
             "name": "Incorrectness | test_incompat_compare3",
-            "score": 0,
+            "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
@@ -170,7 +170,7 @@
         },
         {
             "name": "Incorrectness | test_let",
-            "score": 0,
+            "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
@@ -182,7 +182,7 @@
         },
         {
             "name": "Incorrectness | test_bad_compare",
-            "score": 1,
+            "score": 0,
             "max_score": 1,
             "visibility": "visible"
         },

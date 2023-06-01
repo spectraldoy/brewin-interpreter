@@ -46,6 +46,17 @@ class Field:
     
     def set_to_field(self, other):
         # set this field to be a copy of other, assuming other is a Field
+        if not self.status.ok:
+            return
+        # set this field to hold value, assuming value is a Value
+        if not is_subclass_of(other.type, self.type):
+            self.status = Result.Err(
+                ErrorType.TYPE_ERROR,
+                f"Type mismatch while setting {self.name}: {self.value} is not of type {other.type}"
+            )
+            return
+        
+        # self.type does not change
         self.set_to_value(other.value)
 
     def set_to_value(self, value):

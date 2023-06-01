@@ -71,7 +71,7 @@
             (set z (call me get_op 2))
             (print (call z get_name))
             (print (call z operate 2 7))
-            (print (== x y) " " (== y z) " " (== x z))
+            (print (== x y) " " (== y z) " " (== x z)) # fine because sub inherits add
             (set w (call me get_op 3))
             (print (== x w) (!= z w))
         )
