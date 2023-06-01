@@ -1,0 +1,12 @@
+(class person
+    (method person get_me () (return me))
+)
+
+(class main
+    (method void main ()
+        (let ((person y null))
+            (set y (new person))
+            (print (== y (call y get_me)))
+        )
+    )
+)

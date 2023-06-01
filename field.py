@@ -1,6 +1,6 @@
 from value import create_value, get_default_value
 from result import Result
-from btypes import str_to_type, is_subclass_of, Type
+from btypes import str_to_type, is_subclass_of
 from intbase import ErrorType
 
 class Field:

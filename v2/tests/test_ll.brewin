@@ -1,54 +1,47 @@
 (class node
-    (field node next null)
-    (field int val 0)
-    (method void set_val ((int new_val))
-        (set val new_val)
-    )
-    (method int get_val () (return val))
-    (method void set_next ((node new_next))
-        (set next new_next)
-    )
-    (method node get_next () (return next))
+  (field node next null)
+  (field int value 0)
+  (method void set_val ((int v)) (set value v))
+  (method int get_val () (return value))
+  (method void set_next((node n)) (set next n))
+  (method node get_next() (return next))
 )
+
+(class linkedlist
+  (field node head null)
+  (field node temp null)
+  (method void insert ((int value)) 
+    (begin
+      (set temp (new node))
+      (call temp set_val value)
+      (call temp set_next head)
+      (set head temp)
+    )
+  )
+  (method void print () 
+    (begin 
+      (set temp head)
+      (while (!= temp null)
+        (begin
+          (print (call temp get_val))
+          (set temp (call temp get_next))
+        )
+      )
+    )
+  )
+)
+
 
 (class main
-    (method node create_node ((int val))
-        (let ((node new_node null))
-            (set new_node (new node))
-            (call new_node set_val val)
-            (return new_node)
-        )
+  (field linkedlist x null)
+  (method void main () 
+    (begin 
+      (set x (new linkedlist))
+      (call x insert 10)
+      (call x insert 20)
+      (call x insert 30)
+      (call x print)
     )
-
-    (method void print_ll ((node head))
-        (if (== head null)
-            (return)
-            (begin
-                (print (call head get_val))
-                (call me print_ll (call head get_next))
-            )
-        )
-    )
-
-    (method void main ()
-        (let ((node ll null))
-            (set ll (new node))
-            (call ll set_next (call me create_node 4))
-            (call
-                (call ll get_next)
-                set_next
-                (call me create_node 5)
-            )
-            (call
-                (call
-                    (call ll get_next)
-                    get_next
-                )
-                set_next
-                (call me create_node -22)
-            )
-            (call ll set_val 8)
-            (call me print_ll ll)
-        )
-    )
+  )
 )
+

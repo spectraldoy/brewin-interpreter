@@ -41,7 +41,7 @@ class Object:
         return Result.Ok()
 
     def get_method(self, method_name, argument_types, line_num_of_call=None):
-        # search for 
+        # search for method in self; if not there, search super
         if method_name in self.__methods:
             method = self.__methods[method_name]
             if method.matches_signature(argument_types):
@@ -63,7 +63,7 @@ class Object:
         env = LexicalEnvironment()
 
         # assume arguments is a list of Field objects
-        argument_types = [arg.type for arg in arguments]
+        argument_types = [arg.value.type for arg in arguments]
 
         # me should refer to the same object in derived classes
         if me_field is None:
@@ -255,15 +255,21 @@ class Object:
         let_kw, local_var_defs, *statements = code
         env = env.copy()
 
+        # keep track of all the locals added
+        # but don't use the env to allow shadowing
+        new_local_names = set()
+
         # initialize all the locals and put them in the new env
         for local_type, local_name, local_initial_value in local_var_defs:
             # check for duplicate definition of locals in the env
-            if local_name in env:
+            if local_name in new_local_names:
                 self.interpreter_ref.error(
                     ErrorType.NAME_ERROR,
                     f"Duplicate definition of local {local_name}",
                     let_kw.line_num
                 )
+            
+            new_local_names.add(local_name)
 
             # locals shadow over env and self.fields
             local_as_field_def = FieldDef(

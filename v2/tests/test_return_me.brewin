@@ -1,12 +1,11 @@
-(class person
-    (method person get_me () (return me))
-)
 
 (class main
-    (method void main ()
-        (let ((person y null))
-            (set y (new person))
-            (print (== y (call y get_me)))
-        )
-    )
+ (method main get_me() (return me))
+ (method void talk() (print "hi"))
+ (method void main ()
+  (let ((main x null))
+     (set x (call me get_me))
+     (call x talk) 
+  )
+ )
 )

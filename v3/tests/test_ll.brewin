@@ -1,0 +1,54 @@
+(class node
+    (field node next null)
+    (field int val 0)
+    (method void set_val ((int new_val))
+        (set val new_val)
+    )
+    (method int get_val () (return val))
+    (method void set_next ((node new_next))
+        (set next new_next)
+    )
+    (method node get_next () (return next))
+)
+
+(class main
+    (method node create_node ((int val))
+        (let ((node new_node null))
+            (set new_node (new node))
+            (call new_node set_val val)
+            (return new_node)
+        )
+    )
+
+    (method void print_ll ((node head))
+        (if (== head null)
+            (return)
+            (begin
+                (print (call head get_val))
+                (call me print_ll (call head get_next))
+            )
+        )
+    )
+
+    (method void main ()
+        (let ((node ll null))
+            (set ll (new node))
+            (call ll set_next (call me create_node 4))
+            (call
+                (call ll get_next)
+                set_next
+                (call me create_node 5)
+            )
+            (call
+                (call
+                    (call ll get_next)
+                    get_next
+                )
+                set_next
+                (call me create_node -22)
+            )
+            (call ll set_val 8)
+            (call me print_ll ll)
+        )
+    )
+)

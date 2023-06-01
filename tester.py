@@ -191,7 +191,10 @@ def generate_test_suite_v2():
 
 def generate_test_suite_v3():
     """wrapper for generate_test_suite for v3"""
-    return __generate_test_suite(3, [], [])
+    tests = list(map(lambda x: x[:-7], filter(lambda x: x.endswith(".brewin"), listdir("./v3/tests"))))
+    fails = list(map(lambda x: x[:-7], filter(lambda x: x.endswith(".brewin"), listdir("./v3/fails"))))
+
+    return __generate_test_suite(3, tests, fails)
 
 
 async def main():
