@@ -234,15 +234,18 @@ def generate_test_suite_v3():
     return __generate_test_suite(3, all_tests, all_fails)
 
 
+def generate_test_suite_v3_chinn():
+    """wrapper for generate_test_suite for v3"""
+    all_tests = list(map(lambda x: x[:-7], filter(lambda x: x.endswith(".brewin"), listdir("./v3chinn/tests"))))
+    all_fails = list(map(lambda x: x[:-7], filter(lambda x: x.endswith(".brewin"), listdir("./v3chinn/fails"))))
+
+    return __generate_test_suite("3chinn", all_tests, [])
+
 async def main():
     """main entrypoint: argparses, delegates to test scaffold, suite generator, gradescope output"""
     if not sys.argv:
         raise ValueError("Error: Missing version number argument")
     version = sys.argv[1]
-    module_name = f"interpreterv{version}"
-    interpreter = importlib.import_module(module_name)
-
-    scaffold = TestScaffold(interpreter)
 
     match version:
         case "1":
@@ -251,8 +254,16 @@ async def main():
             tests = generate_test_suite_v2()
         case "3":
             tests = generate_test_suite_v3()
+        case "chinn":
+            tests = generate_test_suite_v3_chinn()
         case _:
             raise ValueError("Unsupported version; expect one of 1,2,3")
+
+    version = 3 if version == "chinn" else version
+    module_name = f"interpreterv{version}"
+    interpreter = importlib.import_module(module_name)
+
+    scaffold = TestScaffold(interpreter)
 
     results = await run_all_tests(scaffold, tests)
     total_score = get_score(results) / len(results) * 100.0

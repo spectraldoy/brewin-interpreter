@@ -1,0 +1,21 @@
+(tclass thing (t)
+    (field t exc "mmmm")
+    (method void throws ()
+        (throw exc)
+    )
+    (method void print_exc ()
+        (print exception)
+    )
+)
+
+(class main
+  (method void main ()
+    (let ((thing@string x))
+      (set x (new thing@string))
+      (try
+        (call x throws)
+        (call x print_exc)
+      )
+    )
+  )
+)

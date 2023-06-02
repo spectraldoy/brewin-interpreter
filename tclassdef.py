@@ -158,7 +158,7 @@ class TClassDef:
             
             case InterpreterBase.LET_DEF:
                 # (let (assignments) stmt1 stmt2)
-                name, assignments, *statements = statement[1]
+                name, assignments, *statements = statement
                 concretized_assignments = []
 
                 # replace type parameters in the assignments block of the let
@@ -173,6 +173,19 @@ class TClassDef:
                 ]
 
                 return [name, concretized_assignments, *concretized_statements]
+
+            case InterpreterBase.THROW_DEF:
+                # (throw expr)
+                name, expr = statement
+                return [name, self.__concretize_templated_expression(expr, type_mapping)]
+
+            case InterpreterBase.TRY_DEF:
+                name, try_block, catch_block = statement
+                return [
+                    name,
+                    self.__concretize_templated_statement(try_block, type_mapping),
+                    self.__concretize_templated_statement(catch_block, type_mapping)
+                ]
 
             case _:
                 self.interpreter_ref.error(

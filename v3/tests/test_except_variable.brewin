@@ -1,0 +1,15 @@
+(class main
+  (field string exc "mmmm")
+  (method void throws ()
+    (throw exc)
+  )
+  (method void print_exc ()
+    (print exception)
+  )
+  (method void main ()
+    (try
+      (call me throws)
+      (print exception)
+    )
+  )
+)

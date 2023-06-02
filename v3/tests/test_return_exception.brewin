@@ -1,0 +1,11 @@
+(class main
+  (method string throws ()
+    (try
+      (throw "hel")
+      (return exception)
+    )
+  )
+  (method void main ()
+    (print (call me throws))
+  )
+)
