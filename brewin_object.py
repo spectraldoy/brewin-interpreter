@@ -9,6 +9,12 @@ from method import Method
 from classdef import FieldDef
 from bparser import StringWithLineNumber
 
+
+class BrewinException(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 class Object:
     STATUS_PROCEED = 0
     STATUS_RETURN = 1
@@ -151,12 +157,20 @@ class Object:
                 return self.__execute_print(env, statement)
             case InterpreterBase.LET_DEF:
                 return self.__execute_let(env, statement)
+            case InterpreterBase.THROW_DEF:
+                return self.__execute_throw(env, statement)
+            case InterpreterBase.TRY_DEF:
+                return self.__execute_try(env, statement)
             case _:
                 self.interpreter_ref.error(
                     ErrorType.SYNTAX_ERROR,
                     f"Attempt to execute undefined statement {name}",
                     name.line_num
                 )
+        
+        # exception should only be visible at one level of the scope
+        # env.pop(InterpreterBase.EXCEPTION_VARIABLE_DEF)
+        return
 
     def __execute_begin(self, env, code):
         for statement in code[1:]:
@@ -178,7 +192,7 @@ class Object:
         else_block = None if len(code) != 4 else code[3]
 
         evaluated_condition = self.__evaluate_expression(env, condition, code[0].line_num)
-        if evaluated_condition.value.type != Type.BOOL:
+        if evaluated_condition.type != Type.BOOL:
             self.interpreter_ref.error(
                 ErrorType.TYPE_ERROR,
                 f"Condition of {InterpreterBase.IF_DEF} did not evaluate to a {InterpreterBase.BOOL_DEF}",
@@ -200,7 +214,7 @@ class Object:
 
         while True:
             evaluated_condition = self.__evaluate_expression(env, cond, code[0].line_num)
-            if evaluated_condition.value.type != Type.BOOL:
+            if evaluated_condition.type != Type.BOOL:
                 self.interpreter_ref.error(
                     ErrorType.TYPE_ERROR,
                     f"Condition of {InterpreterBase.WHILE_DEF} did not evaluate to a {InterpreterBase.BOOL_DEF}",
@@ -312,18 +326,54 @@ class Object:
         
         return Object.STATUS_PROCEED, Field(Type.NOTHING)
 
-    def __evaluate_expression(self, env, expr, line_num_of_expr):
+    def __execute_throw(self, env, code):
+        message = code[1]
+
+        evaluated_message = self.__evaluate_expression(env, message, code[0].line_num)
+        if evaluated_message.type != Type.STRING:
+            self.interpreter_ref.error(
+                ErrorType.TYPE_ERROR,
+                f"Message of {InterpreterBase.THROW_DEF} did not evaluate to a {InterpreterBase.STRING_DEF}",
+                code[0].line_num
+            )
+        
+        evaluated_message = evaluated_message.value.value
+        raise BrewinException(evaluated_message)
+
+    def __execute_try(self, env, code):
+        try_block = code[1]
+        catch_block = code[2]
+
+        try:
+            status, return_field = self.__execute_statement(env, try_block)
+            if status == Object.STATUS_RETURN:
+                return status, return_field
+        except BrewinException as be:
+            env = env.copy()
+            message_value = Value(Type.STRING, str(be))
+            env.set(InterpreterBase.EXCEPTION_VARIABLE_DEF, Field.from_value(message_value))
+            status, return_field = self.__execute_statement(env, catch_block)
+            if status == Object.STATUS_RETURN:
+                return status, return_field
+        
+        return Object.STATUS_PROCEED, Field(Type.NOTHING)
+
+    def __evaluate_expression(self, env, expr, line_num_of_expr, exception_visible=False):
         # returns a Field
         # expressions can be brewin literals
         if not isinstance(expr, list):
             # environment shadows over fields
             env_res = env.get(expr)
             if env_res is not None:
-                # the env stores field: get the Value out and Field type
+                # only get out the environment variable if exceptions are visible
+                if expr != InterpreterBase.EXCEPTION_VARIABLE_DEF or exception_visible:
+                    # TODO
+                    pass
+
+                # note: env stores fields
                 return env_res
             
             if expr in self.__fields:
-                # get the Value object out of the field
                 return self.__fields[expr]
          
             if expr == InterpreterBase.SUPER_DEF:

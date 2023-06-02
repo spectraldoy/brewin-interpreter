@@ -206,7 +206,12 @@ def generate_test_suite_v3():
         "test_ll4",
         "test_overload",
         "test_tclass_shadow",
-        "test_while"
+        "test_while",
+        "test_except1",
+        "test_except2",
+        "test_except13",
+        "test_nested_exception",
+        "test_exception_outside_catch3"
     ]
     
     fails = [
@@ -221,10 +226,12 @@ def generate_test_suite_v3():
         "test_invalid_template_assign",
         "test_let",
         "test_let2",
-        "test_while"
+        "test_while",
+        "test_exception_outside_catch",
+        "test_exception_outside_catch2"
     ]
 
-    return __generate_test_suite(3, tests, fails)
+    return __generate_test_suite(3, all_tests, all_fails)
 
 
 async def main():

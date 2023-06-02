@@ -186,10 +186,11 @@ def is_subclass_of(typ1, typ2):
     if typ1 == typ2:
         return True
     
-    if typ1 == Type.NULL:
+    # null is a subclass of all classes, including tclasses, but not primitive Types
+    if typ1 == Type.NULL and (typ2 == Type.CLASS or not isinstance(typ2, Type)):
         return True
     
-    if not isinstance(typ1, Type) and TClassRegistry.matches(typ1):
+    elif not isinstance(typ1, Type) and TClassRegistry.matches(typ1):
         # no inheritance with templated classes
         supers_of_typ1 = {Type.CLASS}
     else:

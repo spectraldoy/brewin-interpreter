@@ -1,0 +1,17 @@
+(class main
+  (method void throws ()
+    (throw "bruh")
+  )
+  (method void print_exc ()
+    (print exception)
+  )
+  (method void main ()
+    (begin
+      (try
+        (call me throws)
+        (print exception)
+      )
+      (print exception)
+    )
+  )
+)

@@ -119,8 +119,8 @@ class TClassDef:
                 ]]
             
             case InterpreterBase.SET_DEF:
-                statement[2] = self.__concretize_templated_expression(statement[2], type_mapping)
-                return statement
+                new_expr = self.__concretize_templated_expression(statement[2], type_mapping)
+                return [name, statement[1], new_expr]
             
             case InterpreterBase.IF_DEF:
                 cond = self.__concretize_templated_expression(statement[1], type_mapping)
@@ -148,7 +148,7 @@ class TClassDef:
                 return [name, self.__concretize_templated_expression(statement[1], type_mapping)]
             
             case InterpreterBase.INPUT_INT_DEF | InterpreterBase.INPUT_STRING_DEF:
-                return statement
+                return statement[:]
             
             case InterpreterBase.PRINT_DEF:
                 return [name, *[

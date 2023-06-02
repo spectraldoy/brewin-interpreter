@@ -1,11 +1,10 @@
 from bparser import BParser
 from intbase import InterpreterBase, ErrorType
-from brewin_object import Object
+from brewin_object import Object, BrewinException
 from classdef import ClassDef
 from tclassdef import TClassDef
 from btypes import Type, TypeRegistry, TClassRegistry
 from value import Value
-from result import Result
 
 class Interpreter(InterpreterBase):
     # define builtin operations
@@ -81,8 +80,13 @@ class Interpreter(InterpreterBase):
         
         # second pass: instantiate and run main
         self.main_object = self.instantiate_class(InterpreterBase.MAIN_CLASS_DEF)
-        # according to Barista, main doesn't have to have void return type I guess
-        self.main_object.execute_method(InterpreterBase.MAIN_FUNC_DEF)
+
+        # we should just terminate if we get a BrewinException, shouldn't crash
+        try:
+            # according to Barista, main doesn't have to have void return type I guess
+            self.main_object.execute_method(InterpreterBase.MAIN_FUNC_DEF)
+        except BrewinException:
+            pass
         
     def get_class_def(self, class_name):
         if class_name not in self.__class_definitions:

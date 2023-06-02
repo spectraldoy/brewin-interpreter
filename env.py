@@ -17,6 +17,9 @@ class LexicalEnvironment:
     def set(self, symbol, field):
         self.__environment[symbol] = field
     
+    def pop(self, symbol):
+        self.__environment.pop(symbol, None)
+    
     def copy(self):
         new_env = self.__environment.copy()
         return LexicalEnvironment(new_env)

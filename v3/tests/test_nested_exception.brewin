@@ -1,0 +1,14 @@
+(class main
+  (method void main ()
+    (try
+      (throw "hel")
+      (begin
+        (try
+          (throw "nuuu")
+          (print exception)
+        )
+        (print exception)
+      )
+    )
+  )
+)

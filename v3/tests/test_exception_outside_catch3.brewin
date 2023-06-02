@@ -1,0 +1,21 @@
+(class main
+  (field string exc)
+  (method void main ()
+    (try
+      (throw "hel")
+      (begin
+        (try
+          (throw "nuuu")
+          (begin
+            (set exc exception)
+            (print exception)
+            (let ((string exc))
+              (print "nuh " exception)
+            )
+          )
+        )
+        (print exc)
+      )
+    )
+  )
+)
