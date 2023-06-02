@@ -1,0 +1,14 @@
+(tclass bruh (p)
+    (field p x)
+    (method p get_x () (return x))
+)
+
+(class main
+    (method void main ()
+        (let ((bruh@int x))
+            (if (== x null)
+                (set x (new bruh@bool))
+            )
+        )
+    )
+)

@@ -197,12 +197,31 @@ def generate_test_suite_v3():
     tests = [
         "test_default_field",
         "test_default_let",
-        "test_default_field2"
+        "test_default_field2",
+        "test_template1",
+        "test_template8",
+        "test_while",
+        "test_compat_compare_tclass",
+        "test_compat_compare_tclass2",
+        "test_ll4",
+        "test_overload",
+        "test_tclass_shadow",
+        "test_while"
     ]
     
     fails = [
         "test_bad_type_arg",
-        "test_null_dereference"
+        "test_null_dereference",
+        "test_bad_compare_tclass",
+        "test_bad_compare_tclass2",
+        "test_bad_compare_tclass3",
+        "test_bad_num_type_args",
+        "test_bad_num_type_args2",
+        "test_invalid_tclass_instance",
+        "test_invalid_template_assign",
+        "test_let",
+        "test_let2",
+        "test_while"
     ]
 
     return __generate_test_suite(3, tests, fails)

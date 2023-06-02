@@ -162,9 +162,12 @@ def str_to_type(string):
             if len(type_args) != exp_num_args:
                 return Result.Err(
                     ErrorType.TYPE_ERROR,
-                    f"Expected {exp_num_args} to templated class {name} but got {len(type_args)}"
+                    f"Expected {exp_num_args} type arguments to templated class {name} but got {len(type_args)}"
                 )
             
+            # NOTE: with recursion, this currently allows nesting of templated types, i.e.
+            # bruh@bruh@int is valid, returning a bruh with a type arg of (bruh@int)
+            # possibly problematic
             type_args_as_types = map(str_to_type, type_args)
             for type_arg_res in type_args_as_types:
                 if not type_arg_res.ok:

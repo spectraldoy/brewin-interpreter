@@ -1,0 +1,16 @@
+(tclass bruh (p g)
+    (field p x)
+    (field g y)
+    (method p get_x () (return x))
+    (method g get_y () (return y))
+    (method void set_x ((p y)) (set x y))
+    (method void set_y ((g x)) (set y x))
+)
+
+(class main
+    (method void main ()
+        (let ((bruh@int x))
+            (print x)
+        )
+    )
+)

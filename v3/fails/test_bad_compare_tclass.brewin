@@ -1,0 +1,15 @@
+(tclass bruh (p)
+    (field p x)
+    (method p get_x () (return x))
+    (method void set_x ((p y)) (set x y))
+)
+
+(class main
+    (method void main ()
+        (let ((bruh@int x) (bruh@bool y))
+            (set x (new bruh@int))
+            (set y (new bruh@bool))
+            (print (== x y))
+        )
+    )
+)
