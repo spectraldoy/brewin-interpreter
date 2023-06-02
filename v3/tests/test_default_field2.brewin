@@ -1,0 +1,16 @@
+(tclass foo (p)
+    (field p thing)
+    (method p get_thing () (return thing))
+)
+
+(class main
+    (method void main ()
+        (let ((foo@int x) (foo@bool y) (foo@main z))
+            (set x (new foo@int))
+            (set y (new foo@bool))
+            (print (== z null))
+            (set z (new foo@main))
+            (print (call x get_thing) " " (call y get_thing) " " (== null (call z get_thing)))
+        )
+    )
+)

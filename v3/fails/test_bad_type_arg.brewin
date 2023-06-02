@@ -1,0 +1,12 @@
+(tclass foo (p)
+    (field p thing)
+    (method p get_thing () (return thing))
+)
+
+(class main
+    (method void main ()
+        (let ((foo@int x) (foo@false y))
+            (print x y)
+        )
+    )
+)

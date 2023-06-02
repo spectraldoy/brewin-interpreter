@@ -1,0 +1,7 @@
+(class main
+    (method void main ()
+        (let ((int bruh) (bool bruh2) (main x))
+            (print bruh " " bruh2 " " (== x null))
+        )
+    )
+)

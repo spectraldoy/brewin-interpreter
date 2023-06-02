@@ -1,6 +1,6 @@
 from intbase import InterpreterBase, ErrorType
 from result import Result
-from btypes import Type, TypeRegistry, str_to_type
+from btypes import Type, TypeRegistry, TClassRegistry, str_to_type
 
 
 class Value:
@@ -66,7 +66,14 @@ def get_default_value(typ):
         case Type.NOTHING:
             return Value(Type.NOTHING, None)
         case typ if TypeRegistry.defines(typ):
-            return Value(Type.CLASS, None) # null by default for Type.CLASS and all classes
+            return Value(Type.NULL, None) # null by default for Type.CLASS and all classes
+        case string if TClassRegistry.defines(string.split(InterpreterBase.TYPE_CONCAT_CHAR)[0]):
+            res = str_to_type(string)
+            if not res.ok:
+                return f"get_default_value({typ})"
+
+            # by this point it must be a valid type
+            return Value(Type.CLASS, None)
         case _:
             res = str_to_type(typ)
             if not res.ok:
@@ -87,6 +94,13 @@ def get_default_value_as_brewin_literal(typ):
         case Type.NOTHING:
             return InterpreterBase.NOTHING_DEF
         case typ if TypeRegistry.defines(typ):
+            return InterpreterBase.NULL_DEF
+        case string if TClassRegistry.defines(string.split(InterpreterBase.TYPE_CONCAT_CHAR)[0]):
+            res = str_to_type(string)
+            if not res.ok:
+                return f"get_default_value({typ})"
+
+            # by this point it must be a valid type
             return InterpreterBase.NULL_DEF
         case _:
             res = str_to_type(typ)

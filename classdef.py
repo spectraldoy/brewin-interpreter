@@ -1,5 +1,7 @@
 from btypes import Type, TypeRegistry
+from value import get_default_value_as_brewin_literal
 from intbase import InterpreterBase, ErrorType
+from bparser import StringWithLineNumber
 
 class FieldDef:
     """
@@ -7,11 +9,11 @@ class FieldDef:
     Type checking is performed in the Field class, which is used by Object
     These FieldDefs are translated into Fields on instantiation of a class
     """
-    def __init__(self, typ, name, value):
+    def __init__(self, typ, name, value=None):
         # ex: (field int nah 4)
         self.type = typ
         self.name = name
-        self.value = value
+        self.value = value if value is not None else StringWithLineNumber(get_default_value_as_brewin_literal(self.type), typ.line_num)
 
 
 class MethodDef:
@@ -63,7 +65,7 @@ class ClassDef:
             if member[0] == InterpreterBase.FIELD_DEF:
                 field_name = member[2]
                 if field_name in self.__field_defs:
-                    return self.interpreter_ref.error(
+                    self.interpreter_ref.error(
                         ErrorType.NAME_ERROR,
                         f"Two or more definitions of field {field_name}",
                         field_name.line_num
@@ -74,7 +76,7 @@ class ClassDef:
             elif member[0] == InterpreterBase.METHOD_DEF:
                 method_name = member[2]
                 if method_name in self.__method_defs:
-                    return self.interpreter_ref.error(
+                    self.interpreter_ref.error(
                         ErrorType.NAME_ERROR,
                         f"Two or more definitions of method {method_name}",
                         method_name.line_num
@@ -83,9 +85,8 @@ class ClassDef:
                 self.__method_defs[method_name] = MethodDef(*member[1:])
             
             else:
-                return self.interpreter_ref.error(
+                self.interpreter_ref.error(
                     ErrorType.SYNTAX_ERROR,
                     f"Invalid keyword {member[0]} found in class {self.name}",
                     member[0].line_num
                 )
-

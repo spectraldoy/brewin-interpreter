@@ -1,12 +1,13 @@
 import copy
 from env import LexicalEnvironment
 from intbase import ErrorType, InterpreterBase
-from value import Value, get_default_value, create_value
+from value import Value, get_default_value_as_brewin_literal, create_value
 from result import Result
 from btypes import Type, TypeRegistry, is_subclass_of
 from field import Field
 from method import Method
 from classdef import FieldDef
+from bparser import StringWithLineNumber
 
 class Object:
     STATUS_PROCEED = 0
@@ -65,7 +66,8 @@ class Object:
         # assume arguments is a list of Field objects
         # also, when working with function params, need to perform type checking with the Values
         # the arguments hold, rather than the actual fields
-        argument_types = [arg.value.type for arg in arguments]
+        # NOTE: should I be using arg.value.type?
+        argument_types = [arg.type for arg in arguments]
 
         # me should refer to the same object in derived classes
         if me_field is None:
@@ -94,7 +96,8 @@ class Object:
             
             # when working with function params, need to perform type checking with the Values
             # the arguments hold, rather than the actual fields
-            formal_param_field.set_to_value(arg.value)
+            # NOTE: should I be using set_to_value?
+            formal_param_field.set_to_field(arg)
             if not formal_param_field.status.ok:
                 self.interpreter_ref.error(
                     *formal_param_field.status[1:]
@@ -265,7 +268,16 @@ class Object:
         new_local_names = set()
 
         # initialize all the locals and put them in the new env
-        for local_type, local_name, local_initial_value in local_var_defs:
+        for local_var_def in local_var_defs:
+            match local_var_def:
+                case local_type, local_name:
+                    local_type = local_var_def[0]
+                    local_name = local_var_def[1]
+                    local_initial_value = StringWithLineNumber(
+                        get_default_value_as_brewin_literal(local_type), local_type.line_num)
+                case _:
+                    local_type, local_name, local_initial_value = local_var_def
+
             # check for duplicate definition of locals in the env
             if local_name in new_local_names:
                 self.interpreter_ref.error(
@@ -301,7 +313,7 @@ class Object:
         return Object.STATUS_PROCEED, Field(Type.NOTHING)
 
     def __evaluate_expression(self, env, expr, line_num_of_expr):
-        # returns (type, Value)
+        # returns a Field
         # expressions can be brewin literals
         if not isinstance(expr, list):
             # environment shadows over fields

@@ -1,0 +1,9 @@
+(class main
+    (field int def)
+    (field bool defb)
+    (field string defs)
+    (field main bruh)
+    (method void main ()
+        (print def " " defb " " defs " " bruh)
+    )
+)

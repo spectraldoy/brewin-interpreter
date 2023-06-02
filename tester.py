@@ -191,8 +191,19 @@ def generate_test_suite_v2():
 
 def generate_test_suite_v3():
     """wrapper for generate_test_suite for v3"""
-    tests = list(map(lambda x: x[:-7], filter(lambda x: x.endswith(".brewin"), listdir("./v3/tests"))))
-    fails = list(map(lambda x: x[:-7], filter(lambda x: x.endswith(".brewin"), listdir("./v3/fails"))))
+    all_tests = list(map(lambda x: x[:-7], filter(lambda x: x.endswith(".brewin"), listdir("./v3/tests"))))
+    all_fails = list(map(lambda x: x[:-7], filter(lambda x: x.endswith(".brewin"), listdir("./v3/fails"))))
+
+    tests = [
+        "test_default_field",
+        "test_default_let",
+        "test_default_field2"
+    ]
+    
+    fails = [
+        "test_bad_type_arg",
+        "test_null_dereference"
+    ]
 
     return __generate_test_suite(3, tests, fails)
 

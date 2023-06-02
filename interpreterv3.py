@@ -2,8 +2,10 @@ from bparser import BParser
 from intbase import InterpreterBase, ErrorType
 from brewin_object import Object
 from classdef import ClassDef
-from btypes import Type, TypeRegistry
+from tclassdef import TClassDef
+from btypes import Type, TypeRegistry, TClassRegistry
 from value import Value
+from result import Result
 
 class Interpreter(InterpreterBase):
     # define builtin operations
@@ -58,9 +60,12 @@ class Interpreter(InterpreterBase):
         self.trace_output = trace_output
         self.main_object = None
         self.__class_definitions = {}
+        self.__tclass_definitions = {}
 
         # reinitialize the TypeRegistry
         TypeRegistry.clear()
+        # reinitialize the TClassRegistry
+        TClassRegistry.clear()
     
     def run(self, program):
         status, parsed_program = BParser.parse(program)
@@ -71,8 +76,8 @@ class Interpreter(InterpreterBase):
             )
         
         # first pass: define all classes, their fields and methods
-        for parsed_class in parsed_program:
-            self.__define_class(parsed_class)
+        for parsed_class_or_tclass in parsed_program:
+            self.__define_class_or_tclass(parsed_class_or_tclass)
         
         # second pass: instantiate and run main
         self.main_object = self.instantiate_class(InterpreterBase.MAIN_CLASS_DEF)
@@ -88,8 +93,36 @@ class Interpreter(InterpreterBase):
         
         return self.__class_definitions[class_name]
 
+    def get_tclass_def(self, tclass_string):
+        name, *type_args = tclass_string.split(InterpreterBase.TYPE_CONCAT_CHAR)
+
+        if name not in self.__tclass_definitions:
+            super().error(
+                ErrorType.TYPE_ERROR,
+                f"No template class named {name} found"
+            )
+
+        # if not TClassRegistry.matches(tclass_string):
+        #     super().error(
+        #         ErrorType.TYPE_ERROR,
+        #         f"Invalid template class instance {tclass_string}"
+        #     )
+        
+        if tclass_string in self.__class_definitions:
+            return self.__class_definitions[tclass_string]
+        
+        tclass_def = self.__tclass_definitions[name]
+        tclass_instance_def = tclass_def.convert_to_class_def(tclass_string)
+        self.__class_definitions[tclass_string] = tclass_instance_def
+        return tclass_instance_def
+
     def instantiate_class(self, class_name, line_num=None):
-        class_def = self.get_class_def(class_name)
+        # TODO: instantiate templated classes
+        if InterpreterBase.TYPE_CONCAT_CHAR in class_name:
+            class_def = self.get_tclass_def(class_name)
+        else:
+            class_def = self.get_class_def(class_name)
+        
         ret = Object(self, class_def)
         if not ret.status.ok:
             ret.status.line_num = line_num
@@ -97,21 +130,33 @@ class Interpreter(InterpreterBase):
         
         return ret
 
-    def __define_class(self, parsed_class):
-        if parsed_class[0] != InterpreterBase.CLASS_DEF:
-            super().error(
-                ErrorType.SYNTAX_ERROR,
-                f"Brewin++ expects only classes to be defined at the outermost level",
-                parsed_class[0].line_num
-            )
-        
-        name = parsed_class[1]
-        if name in self.__class_definitions:
-            super().error(
-                ErrorType.TYPE_ERROR,
-                f"Two or more definitions of class {name}",
-                name.line_num
-            )
-        
-        self.__class_definitions[name] = ClassDef(parsed_class, self)
-
+    def __define_class_or_tclass(self, parsed_class_or_tclass):
+        match parsed_class_or_tclass[0]:
+            case InterpreterBase.CLASS_DEF:
+                name = parsed_class_or_tclass[1]
+                if name in self.__class_definitions:
+                    super().error(
+                        ErrorType.TYPE_ERROR,
+                        f"Two or more definitions of class {name}",
+                        parsed_class_or_tclass[0].line_num
+                    )
+                
+                self.__class_definitions[name] = ClassDef(parsed_class_or_tclass, self)
+            
+            case InterpreterBase.TEMPLATE_CLASS_DEF:
+                name = parsed_class_or_tclass[1]
+                if name in self.__tclass_definitions:
+                    super().error(
+                        ErrorType.TYPE_ERROR,
+                        f"Two or more definitions of template class {name}",
+                        parsed_class_or_tclass[0].line_num
+                    )
+                
+                self.__tclass_definitions[name] = TClassDef(parsed_class_or_tclass, self)
+            
+            case _:
+                super().error(
+                    ErrorType.SYNTAX_ERROR,
+                    f"Brewin++ expects only classes or templated classes to be defined at the outermost level",
+                    parsed_class_or_tclass[0].line_num
+                )

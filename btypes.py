@@ -72,7 +72,8 @@ class TypeRegistry:
                 return super_sups_res
             
             return Result.Ok(set([res.unwrap()]) | super_sups_res.unwrap())
-            
+    
+    
     @classmethod
     def register(cls, class_name, inherits):
         if cls.defines(class_name):
@@ -96,6 +97,48 @@ class TypeRegistry:
         return Result.Ok()
 
 
+class TClassRegistry:
+    """
+    Class for holding templated types defined using tclass
+    These aren't actual types; but when instantiated with the correct number
+    of type arguments, and with valid type arguments, they become types
+    """
+    # register: tcls -> number of type parameters to tcls
+    __register = {}
+
+    @classmethod
+    def defines(cls, tclass_name):
+        return tclass_name in cls.__register
+    
+    @classmethod
+    def matches(cls, tclass_string):
+        tclass_name, *type_args = tclass_string.split(InterpreterBase.TYPE_CONCAT_CHAR)
+        return cls.defines(tclass_name) and cls.get_num_args(tclass_name).unwrap() == len(type_args)
+
+    @classmethod
+    def get_num_args(cls, tclass_name):
+        if not cls.defines(tclass_name):
+            return Result.Err(ErrorType.TYPE_ERROR, f"No templated class named {tclass_name} found")
+        
+        return Result.Ok(cls.__register[tclass_name])
+    
+    @classmethod
+    def register(cls, tclass_name, num_args):
+        if cls.defines(tclass_name):
+            return Result.Err(ErrorType.TYPE_ERROR, f"Attempted duplicate definition of templated type {tclass_name}")
+        
+        cls.__register[tclass_name] = num_args
+        return Result.Ok()
+    
+    @classmethod
+    def entries(cls):
+        return set(cls.__register.keys())
+    
+    @classmethod
+    def clear(cls):
+        cls.__register = {}
+        return Result.Ok()
+
 
 def str_to_type(string):
     match string:
@@ -111,6 +154,24 @@ def str_to_type(string):
             out = Type.NOTHING
         case string if TypeRegistry.defines(string):
             out = string
+        case string if TClassRegistry.defines(string.split(InterpreterBase.TYPE_CONCAT_CHAR)[0]):
+            name, *type_args = string.split(InterpreterBase.TYPE_CONCAT_CHAR)
+            # definition checking is already done
+            exp_num_args = TClassRegistry.get_num_args(name).unwrap()
+
+            if len(type_args) != exp_num_args:
+                return Result.Err(
+                    ErrorType.TYPE_ERROR,
+                    f"Expected {exp_num_args} to templated class {name} but got {len(type_args)}"
+                )
+            
+            type_args_as_types = map(str_to_type, type_args)
+            for type_arg_res in type_args_as_types:
+                if not type_arg_res.ok:
+                    return type_arg_res
+
+            out = string
+
         case _:
             return Result.Err(ErrorType.TYPE_ERROR, f"Invalid type {string}") 
     
@@ -122,8 +183,16 @@ def is_subclass_of(typ1, typ2):
     if typ1 == typ2:
         return True
     
-    supers_of_typ1_res = TypeRegistry.get_all_supers(typ1)
-    if not supers_of_typ1_res.ok:
-        return False
+    if typ1 == Type.NULL:
+        return True
     
-    return typ2 in supers_of_typ1_res.unwrap()
+    if not isinstance(typ1, Type) and TClassRegistry.matches(typ1):
+        # no inheritance with templated classes
+        supers_of_typ1 = {Type.CLASS}
+    else:
+        supers_of_typ1_res = TypeRegistry.get_all_supers(typ1)
+        if not supers_of_typ1_res.ok:
+            return False
+        supers_of_typ1 = supers_of_typ1_res.unwrap()
+    
+    return typ2 in supers_of_typ1
