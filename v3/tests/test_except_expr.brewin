@@ -1,0 +1,16 @@
+(class main
+  (method string throw_if_bruh ((string inp))
+    (if (== inp "bruh")
+      (throw "bruh")
+      (return inp))
+  )
+  (method void main ()
+    (try
+      (begin
+        (print (+ "hi " (call me throw_if_bruh "noo")))
+        (print (+ "hi " (call me throw_if_bruh "bruh")))
+      )
+      (print exception)
+    )
+  )
+)

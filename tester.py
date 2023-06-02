@@ -239,7 +239,7 @@ def generate_test_suite_v3_chinn():
     all_tests = list(map(lambda x: x[:-7], filter(lambda x: x.endswith(".brewin"), listdir("./v3chinn/tests"))))
     all_fails = list(map(lambda x: x[:-7], filter(lambda x: x.endswith(".brewin"), listdir("./v3chinn/fails"))))
 
-    return __generate_test_suite("3chinn", all_tests, [])
+    return __generate_test_suite("3chinn", all_tests, all_fails)
 
 async def main():
     """main entrypoint: argparses, delegates to test scaffold, suite generator, gradescope output"""

@@ -52,7 +52,7 @@ class ClassDef:
         self.__field_defs = {}
         self.__method_defs = {}
 
-        self.__extract_field_and_method_defs(class_def[body_starts_at:])
+        self.class_body = class_def[body_starts_at:]
     
     def get_field_defs(self):
         return self.__field_defs
@@ -60,8 +60,8 @@ class ClassDef:
     def get_method_defs(self):
         return self.__method_defs
     
-    def __extract_field_and_method_defs(self, class_body):
-        for member in class_body:
+    def extract_field_and_method_defs(self):
+        for member in self.class_body:
             if member[0] == InterpreterBase.FIELD_DEF:
                 field_name = member[2]
                 if field_name in self.__field_defs:
