@@ -114,4 +114,5 @@ class Interpreter(InterpreterBase):
             )
         
         self.__class_definitions[name] = ClassDef(parsed_class, self)
+        self.__class_definitions[name].extract_field_and_method_defs()
 

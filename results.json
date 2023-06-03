@@ -1,25 +1,19 @@
 {
     "tests": [
         {
-            "name": "Correctness | test_ll4",
+            "name": "Correctness | v_except1",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_while2",
+            "name": "Correctness | v_except12",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_ll",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Correctness | test_template8",
+            "name": "Correctness | v_except24",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
@@ -31,13 +25,25 @@
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_except13",
+            "name": "Correctness | test_default_return_after_caught_exc",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_inher1",
+            "name": "Correctness | v_except3",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Correctness | v_except10",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Correctness | test_except13",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
@@ -55,85 +61,61 @@
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_default_let",
+            "name": "Correctness | v_except22",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_while4",
+            "name": "Correctness | v_except7",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_ll2",
+            "name": "Correctness | v_except14",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_default_field2",
+            "name": "Correctness | v_except18",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_return_me2",
+            "name": "Correctness | v_except20",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_let",
+            "name": "Correctness | v_except9",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_return_assign_type",
+            "name": "Correctness | v_except5",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_return_me",
+            "name": "Correctness | v_except16",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_empty_let",
+            "name": "Correctness | test_except_over_type_error",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_compat_compare_tclass2",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Correctness | test_inher3",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Correctness | test_me_and_super",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Correctness | test_return_null",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Correctness | test_overload",
+            "name": "Correctness | test_nested_exception2",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
@@ -145,37 +127,49 @@
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_while3",
+            "name": "Correctness | v_except13",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_str_ops",
+            "name": "Correctness | v_except2",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_instantiate_and_call2",
+            "name": "Correctness | v_except11",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_compat_compare",
+            "name": "Correctness | test_except_over_return_type_error",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_ll3",
+            "name": "Correctness | test_throw_elsewhere",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_most_derived",
+            "name": "Correctness | v_except6",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Correctness | v_except15",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Correctness | v_except19",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
@@ -187,37 +181,7 @@
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_tclass_shadow",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Correctness | test_inher2",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Correctness | test_return_assign_type2",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Correctness | test_compat_compare_tclass",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
             "name": "Correctness | test_return_exception",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Correctness | test_template1",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
@@ -229,13 +193,37 @@
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_default_field",
+            "name": "Correctness | test_throw_in_catch",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
-            "name": "Correctness | test_while",
+            "name": "Correctness | v_except8",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Correctness | v_test_except25",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Correctness | v_except4",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Correctness | v_except17",
+            "score": 1,
+            "max_score": 1,
+            "visibility": "visible"
+        },
+        {
+            "name": "Correctness | v_except21",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
@@ -247,91 +235,13 @@
             "visibility": "visible"
         },
         {
-            "name": "Incorrectness | test_invalid_tclass_instance",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_instantiate_invalid",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_bad_num_type_args2",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_incompat_compare",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_bad_compare_tclass2",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_incompat_compare3",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_invalid_template_assign",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_call_badargs",
+            "name": "Incorrectness | test_bad_return_exception",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
         },
         {
             "name": "Incorrectness | test_bad_templated_except",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_bad_compare_tclass",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_null_dereference",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_bad_value",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_let",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_return_assign_type",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_bad_compare",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"
@@ -349,67 +259,7 @@
             "visibility": "visible"
         },
         {
-            "name": "Incorrectness | test_compare_null",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_bad_num_type_args",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_let2",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_incompat_compare2",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_bad_compare_tclass3",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_return",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_bad_type_arg",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_invalid_set_param",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_bad_param",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_while",
-            "score": 1,
-            "max_score": 1,
-            "visibility": "visible"
-        },
-        {
-            "name": "Incorrectness | test_invalid_super",
+            "name": "Incorrectness | test_except4",
             "score": 1,
             "max_score": 1,
             "visibility": "visible"

@@ -10,14 +10,11 @@ from classdef import FieldDef
 from bparser import StringWithLineNumber
 
 
-class BrewinException(Exception):
-    def __init__(self, message):
-        super().__init__(message)
-
 
 class Object:
     STATUS_PROCEED = 0
     STATUS_RETURN = 1
+    STATUS_EXCEPTION = 2
 
     def __init__(self, interpreter_ref, class_def):
         self.interpreter_ref = interpreter_ref
@@ -115,8 +112,12 @@ class Object:
         # by default, return the default value for the return type
         ret = Field(method.return_type)
 
+        # TODO: propagating exceptions upwards outside method calls?
+        if status == Object.STATUS_EXCEPTION:
+            return status, return_field
+
         if return_field.type == Type.NOTHING:
-            return ret
+            return Object.STATUS_PROCEED, ret
 
         if status == Object.STATUS_RETURN:
             ret.set_to_field(return_field)
@@ -131,7 +132,7 @@ class Object:
             if not ret.status.ok:
                 self.interpreter_ref.error(*ret.status[1:])
         
-        return ret
+        return Object.STATUS_PROCEED, ret
     
     def __execute_statement(self, env, statement):
         name = statement[0]
@@ -167,22 +168,22 @@ class Object:
                     f"Attempt to execute undefined statement {name}",
                     name.line_num
                 )
-        
-        # exception should only be visible at one level of the scope
-        # env.pop(InterpreterBase.EXCEPTION_VARIABLE_DEF)
-        return
 
     def __execute_begin(self, env, code):
         for statement in code[1:]:
             status, return_field = self.__execute_statement(env, statement)
-            if status == Object.STATUS_RETURN:
+            if status == Object.STATUS_RETURN or status == Object.STATUS_EXCEPTION:
                 return status, return_field
         
         return Object.STATUS_PROCEED, Field(Type.NOTHING)
 
     def __execute_set(self, env, code):
         # (set var expr)
-        field = self.__evaluate_expression(env, code[2], code[0].line_num)
+        status, field = self.__evaluate_expression(env, code[2], code[0].line_num)
+
+        if status == Object.STATUS_EXCEPTION:
+            return status, field
+
         self.__execute_set_aux(env, code[1], field, code[0].line_num)
         return Object.STATUS_PROCEED, Field(Type.NOTHING)
 
@@ -191,7 +192,11 @@ class Object:
         if_block = code[2]
         else_block = None if len(code) != 4 else code[3]
 
-        evaluated_condition = self.__evaluate_expression(env, condition, code[0].line_num)
+        status, evaluated_condition = self.__evaluate_expression(env, condition, code[0].line_num)
+
+        if status == Object.STATUS_EXCEPTION:
+            return status, evaluated_condition
+
         if evaluated_condition.type != Type.BOOL:
             self.interpreter_ref.error(
                 ErrorType.TYPE_ERROR,
@@ -213,7 +218,11 @@ class Object:
         statement = code[2]
 
         while True:
-            evaluated_condition = self.__evaluate_expression(env, cond, code[0].line_num)
+            status, evaluated_condition = self.__evaluate_expression(env, cond, code[0].line_num)
+
+            if status == Object.STATUS_EXCEPTION:
+                return status, evaluated_condition
+
             if evaluated_condition.type != Type.BOOL:
                 self.interpreter_ref.error(
                     ErrorType.TYPE_ERROR,
@@ -227,20 +236,23 @@ class Object:
                 break
 
             status, return_field = self.__execute_statement(env, statement)
-            if status == Object.STATUS_RETURN:
+            if status == Object.STATUS_RETURN or status == Object.STATUS_EXCEPTION:
                 return status, return_field
 
         return Object.STATUS_PROCEED, Field(Type.NOTHING)
 
     def __execute_call(self, env, code):
-        return Object.STATUS_PROCEED, self.__execute_call_aux(env, code, code[0].line_num)
+        return self.__execute_call_aux(env, code, code[0].line_num)
 
     def __execute_return(self, env, code):
         if len(code) == 1:
             # return with no expression
             out = Field(Type.NOTHING)
         else:
-            out = self.__evaluate_expression(env, code[1], code[0].line_num)
+            status, out = self.__evaluate_expression(env, code[1], code[0].line_num)
+
+            if status == Object.STATUS_EXCEPTION:
+                return status, out
 
         return Object.STATUS_RETURN, out
 
@@ -264,7 +276,15 @@ class Object:
                 return InterpreterBase.TRUE_DEF if val.value.value else InterpreterBase.FALSE_DEF
             return str(val.value.value)
 
-        evald_exprs = [self.__evaluate_expression(env, expr, code[0].line_num) for expr in code[1:]]
+        evald_exprs = []
+        for expr in code[1:]:
+            status, evald_expr = self.__evaluate_expression(env, expr, code[0].line_num)
+
+            if status == Object.STATUS_EXCEPTION:
+                return status, evald_expr
+
+            evald_exprs.append(evald_expr)
+
         output = "".join(map(convert_to_brewin_literal, evald_exprs))
 
         self.interpreter_ref.output(output)
@@ -321,7 +341,7 @@ class Object:
         # execute the statements
         for statement in statements:
             status, return_field = self.__execute_statement(env, statement)
-            if status == Object.STATUS_RETURN:
+            if status == Object.STATUS_RETURN or status == Object.STATUS_EXCEPTION:
                 return status, return_field
         
         return Object.STATUS_PROCEED, Field(Type.NOTHING)
@@ -329,56 +349,57 @@ class Object:
     def __execute_throw(self, env, code):
         message = code[1]
 
-        evaluated_message = self.__evaluate_expression(env, message, code[0].line_num)
+        status, evaluated_message = self.__evaluate_expression(env, message, code[0].line_num)
+
         if evaluated_message.type != Type.STRING:
             self.interpreter_ref.error(
                 ErrorType.TYPE_ERROR,
                 f"Message of {InterpreterBase.THROW_DEF} did not evaluate to a {InterpreterBase.STRING_DEF}",
                 code[0].line_num
             )
+
+        if status == Object.STATUS_EXCEPTION:
+            return status, evaluated_message
         
-        evaluated_message = evaluated_message.value.value
-        raise BrewinException(evaluated_message)
+        return Object.STATUS_EXCEPTION, evaluated_message
 
     def __execute_try(self, env, code):
         try_block = code[1]
         catch_block = code[2]
 
-        try:
-            status, return_field = self.__execute_statement(env, try_block)
-            if status == Object.STATUS_RETURN:
-                return status, return_field
-        except BrewinException as be:
+        # try the try block
+        status, return_field = self.__execute_statement(env, try_block)
+        
+        # except a STATUS_EXCEPTION
+        if status == Object.STATUS_EXCEPTION:
             env = env.copy()
-            message_value = Value(Type.STRING, str(be))
-            env.set(InterpreterBase.EXCEPTION_VARIABLE_DEF, Field.from_value(message_value))
+            env.set(InterpreterBase.EXCEPTION_VARIABLE_DEF, return_field)
             status, return_field = self.__execute_statement(env, catch_block)
-            if status == Object.STATUS_RETURN:
+            
+            if status == Object.STATUS_RETURN or status == Object.STATUS_EXCEPTION:
                 return status, return_field
+
+        elif status == Object.STATUS_RETURN:
+            return status, return_field
         
         return Object.STATUS_PROCEED, Field(Type.NOTHING)
 
-    def __evaluate_expression(self, env, expr, line_num_of_expr, exception_visible=False):
-        # returns a Field
+    def __evaluate_expression(self, env, expr, line_num_of_expr):
+        # returns a status and Field
         # expressions can be brewin literals
         if not isinstance(expr, list):
             # environment shadows over fields
             env_res = env.get(expr)
             if env_res is not None:
-                # only get out the environment variable if exceptions are visible
-                if expr != InterpreterBase.EXCEPTION_VARIABLE_DEF or exception_visible:
-                    # TODO
-                    pass
-
                 # note: env stores fields
-                return env_res
+                return Object.STATUS_PROCEED, env_res
             
             if expr in self.__fields:
-                return self.__fields[expr]
+                return Object.STATUS_PROCEED, self.__fields[expr]
          
             if expr == InterpreterBase.SUPER_DEF:
                 if self.__super is not None:
-                    return Field.from_value(Value(self.__super.name, self.__super), InterpreterBase.SUPER_DEF)
+                    return Object.STATUS_PROCEED, Field.from_value(Value(self.__super.name, self.__super), InterpreterBase.SUPER_DEF)
                 
                 self.interpreter_ref.error(
                     ErrorType.TYPE_ERROR,
@@ -392,7 +413,7 @@ class Object:
                 self.interpreter_ref.error(*val_res[1:])
             
             val = val_res.unwrap()
-            return Field.from_value(val)
+            return Object.STATUS_PROCEED, Field.from_value(val)
         
         # otherwise an expression is an operator with arguments
         operator, *args = expr
@@ -405,15 +426,23 @@ class Object:
                     f"Invalid number of arguments to binary operator {operator}",
                     line_num_of_expr
                 )
-            
-            operand1, operand2 = [self.__evaluate_expression(env, arg, line_num_of_expr) for arg in args]
+
+            # check for errors in order of expressions evaluated
+            # don't want to evaluate all expressions and *then* propagate errors
+            stat1, operand1 = self.__evaluate_expression(env, args[0], line_num_of_expr)
+            if stat1 == Object.STATUS_EXCEPTION:
+                return stat1, operand1
+
+            stat2, operand2 = self.__evaluate_expression(env, args[1], line_num_of_expr)
+            if stat2 == Object.STATUS_EXCEPTION:
+                return stat2, operand2
 
             # Object types can only be operated on if they are sub / super classes of each other
             if is_subclass_of(operand1.type, Type.CLASS) and is_subclass_of(operand2.type, Type.CLASS):
                 if (is_subclass_of(operand1.value.type, operand2.value.type) or is_subclass_of(operand2.value.type, operand1.value.type)) and \
                     (is_subclass_of(operand1.type, operand2.type) or is_subclass_of(operand2.type, operand1.type)):
                     ret = self.interpreter_ref.binary_ops[Type.CLASS][operator](operand1.value, operand2.value)
-                    return Field.from_value(ret)
+                    return Object.STATUS_PROCEED, Field.from_value(ret)
                 else:
                     self.interpreter_ref.error(
                         ErrorType.TYPE_ERROR,
@@ -438,7 +467,7 @@ class Object:
                 )
             
             ret = self.interpreter_ref.binary_ops[operand1.type][operator](operand1.value, operand2.value)
-            return Field.from_value(ret)
+            return Object.STATUS_PROCEED, Field.from_value(ret)
         
         if operator in self.interpreter_ref.unary_op_set:
             if len(args) != 1:
@@ -448,7 +477,11 @@ class Object:
                     line_num_of_expr
                 )
 
-            operand = self.__evaluate_expression(env, args[0], line_num_of_expr)
+            status, operand = self.__evaluate_expression(env, args[0], line_num_of_expr)
+
+            if status == Object.STATUS_EXCEPTION:
+                return status, operand
+
             if operand.type not in self.interpreter_ref.unary_ops or \
                 operator not in self.interpreter_ref.unary_ops[operand.type]:
                 self.interpreter_ref.error(
@@ -458,7 +491,7 @@ class Object:
                 )
             
             ret = self.interpreter_ref.unary_ops[operand.type][operator](operand.value)
-            return Field.from_value(ret)
+            return Object.STATUS_PROCEED, Field.from_value(ret)
 
         if operator == InterpreterBase.NEW_DEF:
             if len(args) != 1:
@@ -467,9 +500,11 @@ class Object:
                     f"{InterpreterBase.NEW_DEF} expects only 1 argument but {len(args)} were given",
                     line_num_of_expr
                 )
-            return self.__execute_new_aux(args[0], line_num_of_expr)
+            # should also return a status and Field
+            return Object.STATUS_PROCEED, self.__execute_new_aux(args[0], line_num_of_expr)
 
         if operator == InterpreterBase.CALL_DEF:
+            # should also return a status and Field
             return self.__execute_call_aux(env, expr)
 
         self.interpreter_ref.error(
@@ -525,7 +560,11 @@ class Object:
             me_field = Field.from_value(Value(obj.name, obj))
         else:
             # evaluate_expression returns a Value object: this gets the actual value out of it
-            obj_field = self.__evaluate_expression(env, obj_name, line_num_of_call)
+            status, obj_field = self.__evaluate_expression(env, obj_name, line_num_of_call)
+
+            if status == Object.STATUS_EXCEPTION:
+                return status, obj_field
+
             if obj_field.value.is_null():
                 self.interpreter_ref.error(
                     ErrorType.FAULT_ERROR,
@@ -536,7 +575,14 @@ class Object:
             me_field = None
             
         method_name, *args = expr[2:]
-        args_as_fields = [self.__evaluate_expression(env, arg, line_num_of_call) for arg in args]
+        args_as_fields = []
+        for arg in args:
+            status, evald_arg = self.__evaluate_expression(env, arg, line_num_of_call)
+
+            if status == Object.STATUS_EXCEPTION:
+                return status, evald_arg
+
+            args_as_fields.append(evald_arg)
 
         return obj.execute_method(method_name, args_as_fields, line_num_of_call, me_field)
 

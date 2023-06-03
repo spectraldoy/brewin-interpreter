@@ -1,0 +1,23 @@
+(class foo
+    (method void throws ()
+        (throw "foo")
+    )
+)
+
+(class main
+    (method void main ()
+        (try
+            (let ((foo x))
+                (set x (new foo))
+                (try
+                    (call x throws)
+                    (begin
+                        (print exception)
+                        (throw "bah")
+                    )
+                )
+            )
+            (print exception)
+        )
+    )
+)

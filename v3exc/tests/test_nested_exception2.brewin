@@ -1,0 +1,19 @@
+(class main 
+    (method void h ()
+        (throw "h")
+    )
+
+    (method void g ()
+        (try
+            (call me h)
+            (throw "g")
+        )
+    )
+
+    (method void main ()
+        (try
+            (call me g)
+            (print "main")
+        )
+    )
+)

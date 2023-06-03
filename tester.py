@@ -241,6 +241,13 @@ def generate_test_suite_v3_chinn():
 
     return __generate_test_suite("3chinn", all_tests, all_fails)
 
+def generate_test_suite_v3_exc():
+    """wrapper for generate_test_suite for v3"""
+    all_tests = list(map(lambda x: x[:-7], filter(lambda x: x.endswith(".brewin"), listdir("./v3exc/tests"))))
+    all_fails = list(map(lambda x: x[:-7], filter(lambda x: x.endswith(".brewin"), listdir("./v3exc/fails"))))
+
+    return __generate_test_suite("3exc", all_tests, all_fails)
+
 async def main():
     """main entrypoint: argparses, delegates to test scaffold, suite generator, gradescope output"""
     if not sys.argv:
@@ -256,10 +263,12 @@ async def main():
             tests = generate_test_suite_v3()
         case "chinn":
             tests = generate_test_suite_v3_chinn()
+        case "exc":
+            tests = generate_test_suite_v3_exc()
         case _:
             raise ValueError("Unsupported version; expect one of 1,2,3")
 
-    version = 3 if version == "chinn" else version
+    version = 3 if version in {"chinn", "exc"} else version
     module_name = f"interpreterv{version}"
     interpreter = importlib.import_module(module_name)
 

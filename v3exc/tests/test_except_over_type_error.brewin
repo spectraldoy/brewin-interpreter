@@ -1,0 +1,22 @@
+(class main
+  (field int c)
+  (method int foo ()
+    (begin
+      (set c (+ c 1))
+      (throw "gnarly")
+    )
+  )
+  (method bool foo2 ()
+    (print "hi")
+  )
+  (method int get_c () (return c))
+  (method void main ()
+    (let ((main x))
+      (set x (new main))
+      (try
+        (print (& (call x foo) (call me foo)))
+        (print exception (call x get_c) (call me get_c))
+      )
+    )
+  )
+)

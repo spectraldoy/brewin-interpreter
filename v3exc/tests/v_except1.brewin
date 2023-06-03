@@ -28,11 +28,11 @@
        (print exception)
     )
     
-        (try
+    (try
        (print (* 1 (call me foo)))
        (print exception)
     )
-            (try
+     (try
        (print (% 1 (call me foo)))
        (print exception)
     )

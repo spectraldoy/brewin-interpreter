@@ -1,0 +1,18 @@
+(class main
+  (method int foo ()
+    (return (call me foo2))
+  )
+  (method bool foo2 ()
+    (return (call me foo3))
+  )
+  (method string foo3 ()
+    (throw "bah")
+    (return "foo3")
+  )
+  (method void main ()
+    (try
+      (print (== 0 (call me foo)))
+      (print exception)
+      )
+  )
+)

@@ -1,0 +1,15 @@
+(class main
+    (method void throws ()
+        (throw "bruh")
+    )
+
+    (method void main ()
+        (try
+            (call me throws)
+            (begin
+                (print "catch")
+                (call me throws)
+            )
+        )
+    )
+)

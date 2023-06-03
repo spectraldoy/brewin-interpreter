@@ -4,10 +4,10 @@
     (try
       (throw "hel")
       (begin
+        (set exc exception)
         (try
           (throw "nuuu")
           (begin
-            (set exc exception)
             (print exception)
             (let ((string exc))
               (print "nuh " exception)

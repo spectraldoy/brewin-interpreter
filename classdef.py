@@ -21,7 +21,7 @@ class MethodDef:
     Stores code definition of a method to run. 
     Type checking is performed in the Object class, which handles execution
     """
-    def __init__(self, return_type, name, formal_params, statement):
+    def __init__(self, return_type, name, formal_params, statement, *_rest):
         # ex: (method void main () (blah))
         self.return_type = return_type
         self.name = name
