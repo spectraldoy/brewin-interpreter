@@ -6,8 +6,10 @@
     (return (call me foo3))
   )
   (method string foo3 ()
-    (throw "bah")
-    (return "foo3")
+    (begin
+      (throw "bah")
+      (return "foo3")
+    )
   )
   (method void main ()
     (try
