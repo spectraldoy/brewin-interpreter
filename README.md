@@ -4,6 +4,8 @@ This repository contains my implementations of the Brewin# and Brewin++ interpre
 
 Sample Brewin++ programs can be found in the `v2` directory, and sample Brewin# programs can be found in the `v3` directory. These are structured the way they are so as to work with the `tester.py` and `harness.py` files, which implement an autograder. This autograder was provided to us and was not written by me. It comes from this repo: https://github.com/UCLA-CS-131/spring-23-autograder. The `intbase.py` (base interpreter) and `bparser.py` (Brewin parser) files were also provided to us, and come from here: https://github.com/UCLA-CS-131/spring-23-project-starter.
 
+Some test cases were contributed by other CS 131 students.
+
 This project requires Python 3.11 to work correctly.
 
 ## Running a Brewin# program
